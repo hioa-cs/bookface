@@ -1,0 +1,151 @@
+body    {
+        background-color: white;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        font-size: 10pt;
+        padding-top: 5px;
+        padding-left: 15px;
+        padding-right: 0px;
+        padding-bottom: 15px;
+        margin: 6px;
+        }
+
+img	{
+	border: 0;
+	}
+
+
+td      {
+        background-color: white;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        font-size: 10pt;
+        }
+td.post      {
+        background-color: lightblue;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        font-size: 10pt;
+		width: 150px;
+        }
+
+td.commentpost      {
+        background-color: #666699;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        font-size: 10pt;
+		width: 150px;
+        }
+
+table.commentrow {
+	padding-left: 20px;
+	
+}
+
+td.comment      {
+        background-color: white;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        font-size: 10pt;
+		width: 150px;
+        }
+td.postcontent      {
+        background-color: white;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        font-size: 10pt;
+		width: 400px;
+        }
+
+
+h1      {
+        color: #666699;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        }
+
+h1.header      {
+		color: white;
+        background-color: #666699;
+        font-size: 30pt;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        }
+
+h2.header      {
+		color: white;
+        background-color: #666699;
+        font-size: 19pt;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        }
+
+td.header      {
+		color: white;
+        background-color: #666699;
+        font-size: 14pt;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+		padding-right: 40px;
+        }
+
+table.row {
+	    background-color: grey;
+		border-collapse: collapse; 
+		width: 50%;
+	
+}
+
+td.row {
+	    background-color: #666699;
+	
+}
+
+table.headertable      {
+		
+        background-color: #666699;
+        font-size: 19pt;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        }
+
+h3, h4, h6
+        {   
+        color: #666699;
+        font-family: Verdana, Arial, Helvetica, sans-serif;     
+        text-align: left;
+
+        }
+
+a:link  {
+        color: blue;
+        }
+
+a:link.title  {
+        color: white;
+        }
+a.title {
+	text-decoration: none;
+	
+	}
+
+a:visited 
+        {
+        color: orange;
+        }
+
+a:visited.title 
+        {
+        color: white;
+        }
+
+
+a:hover {
+        color: teal;
+        }
+
+p       {
+        color: #CCCCCC;
+        font-style: bold;
+        font-family: Helvetica, Verdana, Arial, sans-serif;
+        font-size: 10pt;
+        text-align: left;
+
+        }
+
+p.author {
+        color: grey;
+        font-style: italic;
+        font-family: sans-serif, Verdana, Arial, Helvetica;
+        font-size: 10pt;
+        padding-left: 20px;
+        }
