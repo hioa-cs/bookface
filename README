@@ -47,10 +47,8 @@ Make sure you have git installed. This can be done with ```apt-get install git``
 
 ## Downloading the PHP files
 
-Bookface has several versions, titled v1, v2, v3 and so on. Once you decide on the version you have to use git to clone the code: 
-
 ```
-git clone -b version_number https://git.cs.hioa.no/kyrre/bookface.git
+git clone  https://git.cs.hioa.no/kyrre/bookface.git
 cd bookface
 ```
 
