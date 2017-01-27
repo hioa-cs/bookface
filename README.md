@@ -48,7 +48,7 @@ Make sure you have git installed. This can be done with ```apt-get install git``
 ## Downloading the PHP files
 
 ```
-git clone https://git.cs.hioa.no/kyrre/bookface.git
+git clone https://git.cs.hioa.no/kyrre.begnum/bookface.git
 cd bookface
 ```
 
