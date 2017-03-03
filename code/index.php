@@ -2,7 +2,7 @@
 <HEAD>
     <LINK href="stylesheet.css" rel="stylesheet" type="text/css">
   </HEAD>
-<!-- bookface version 2 -->
+<!-- bookface version 3 -->
 <?php
    $starttime = time();
    include_once "config.php";
