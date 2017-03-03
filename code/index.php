@@ -51,22 +51,24 @@
        echo "<h2>Latest activity</h2>\n";
        #			$user_list_for_front_page;
        if ( isset($memcache_enabled) and $memcache_enabled == 1 and $memcache ){
-	   $user_list_for_front_page = $memcache->get("user_list_for_front_page");
-       } else {
-
-	   $sql = "select userID,name,status,posts,comments,lastPostDate from user order by lastPostDate desc";
-	   if ( isset($frontpage_limit) ){
-	       $sql = $sql . " limit $frontpage_limit";
-	   }
-	   $res = mysql_query($sql);
-	   while($rec = mysql_fetch_assoc($res)){
-	       $user_list_for_front_page[] = $rec;
-    			}
-	   // cache for 10 minutes
-	   if ( isset($memcache) and $memcache ){
-	       $memcache->set("user_list_for_front_page", $user_list_for_front_page,0,600);
-	   }	
+    	   $user_list_for_front_page = $memcache->get("user_list_for_front_page");
        }
+
+       if ( empty($user_list_for_front_page) ) {
+
+	      $sql = "select userID,name,status,posts,comments,lastPostDate from user order by lastPostDate desc";
+	       if ( isset($frontpage_limit) ){
+	         $sql = $sql . " limit $frontpage_limit";
+	       }
+	       $res = mysql_query($sql);
+	       while($rec = mysql_fetch_assoc($res)){
+	         $user_list_for_front_page[] = $rec;
+    	   }
+	   // cache for 10 minutes
+	       if ( isset($memcache) and $memcache ){
+	       $memcache->set("user_list_for_front_page", $user_list_for_front_page,0,600);
+	       }	
+      }
        echo "<table class=row >\n";
        echo "<tr><td></td><td>Name:</td><td>Posts</td></tr>\n";
        $alternator = 0;
