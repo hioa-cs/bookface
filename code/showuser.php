@@ -48,9 +48,12 @@
 						echo "</tr></table>\n";
 			echo "<b>Member since: " . $res['createDate'] . " posts: " . $res['posts'] . "</b><br>\n";						
 
+			$posts_by_user = array();
 			if ( isset($memcache) and $memcache ){
 				$posts_by_user = $memcache->get("posts_by_$user");
-			} else {
+			}
+
+			if (empty($posts_by_user)){
     			echo "<! No memcache object found: posts_by_$user !>\n";
 				$posts_by_user = array();
     			$sql = "select postID,text,postDate from posts where userID = $user order by postDate desc;";
@@ -73,10 +76,11 @@
 					$postcount++;
 					
 					$key = "comments_on_" . $res['postID'];
-					if ( $memcache ){
+					$comments_on_post = array();
+					if (  isset($memcache) and $memcache ){
 						$comments_on_post = $memcache->get($key);
 					}
-					if( $comments_on_post == false){
+					if( empty($comments_on_post)){
     					echo "<! No memcache object for comment found: $key !>\n";
 						$comments_on_post = array();
     					$sql = "select commentID,text,userID,postDate from comments where postID = " . $res['postID'] . " order by postDate asc;";

@@ -5,7 +5,8 @@
 	$postID = $_GET['postID'];
 	
 	include_once "config.php";
-$link = mysql_connect("$dbhost:$dbport", $dbuser,$dbpassw );
+    $link = mysql_connect("$dbhost:$dbport", $dbuser,$dbpassw );
+    echo "Connecting to db at $dbhost:$dbport<br>\n";
 	if ($link){
     	echo "Connection successful!\n<br>";
     	$bfdb = mysql_select_db($db,$link);
@@ -13,7 +14,7 @@ $link = mysql_connect("$dbhost:$dbport", $dbuser,$dbpassw );
 				echo "Cannot use $db: " . mysql_error() ."<br>";
     	} else {
 			echo "Correct database found<br>\n";
-	    if ( isset($_GET['nomemcache']){
+	    if ( isset($_GET['nomemcache'])) {
 		$memcache_override = $_GET['nomemcache'];
 	    }
 			if ( $memcache_enabled == 1 and ! $memcache_override ){
