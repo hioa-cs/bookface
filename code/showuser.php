@@ -12,7 +12,7 @@
 	
 		echo "\n<table class=headertable>\n<tr>";
 			echo "<td class=header ><td class=header>";
-						echo "<h1 class=header><a class=title href='$weburl'>bookface</a></h1>";
+						echo "<h1 class=header><a class=title href='/index.php'>bookface</a></h1>";
 						echo "</tr></table><br><br>\n";
    if ( isset($replica_dbhost) ){
        $dbhost = $replica_dbhost;
@@ -43,7 +43,7 @@
 			$res = mysql_fetch_array($result);
 
 			echo "\n<table class=headertable>\n<tr>";
-			echo "<td class=header ><img src='$weburl/showimage.php?user=$user'><td class=header>";
+			echo "<td class=header ><img src='/showimage.php?user=$user'><td class=header>";
 						echo "<h2 class=hader>" . $res['name'] . "</h2>";
 						echo "</tr></table>\n";
 			echo "<b>Member since: " . $res['createDate'] . " posts: " . $res['posts'] . "</b><br>\n";						
@@ -101,7 +101,7 @@
 						foreach ( $comments_on_post as $cres ){
 								$users = mysql_query("select name from user where userID = $cres[userID]");
 								$ures = mysql_fetch_array($users);
-								$table .= "<tr  ><td class=commentpost >" . $cres['postDate'] . "</td><td><a href='$weburl/showuser.php?user=" . $cres['userID']. "'><img src='$weburl/showimage.php?user=".$cres['userID'] ."'></a></td><td><b><a href='$weburl/showuser.php?user=" . $cres['userID']. "'>" . $ures['name'] . ": </a></b></td><td>" . $cres['text'] . "</td></tr>";
+								$table .= "<tr  ><td class=commentpost >" . $cres['postDate'] . "</td><td><a href='/showuser.php?user=" . $cres['userID']. "'><img src='/showimage.php?user=".$cres['userID'] ."'></a></td><td><b><a href='/showuser.php?user=" . $cres['userID']. "'>" . $ures['name'] . ": </a></b></td><td>" . $cres['text'] . "</td></tr>";
 							
 						}
 						$comments_on_post = array();

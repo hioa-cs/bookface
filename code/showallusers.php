@@ -17,9 +17,9 @@ include_once "config.php";
 			echo "<table>\n";
 			while ( $res = mysql_fetch_array($result) ){
 				echo "<tr>\n";
-				echo "<td><a href='$weburl/showuser.php?user=" . $res['userID']. "'>" . $res['name'] . "</a></td>";
+				echo "<td><a href='/showuser.php?user=" . $res['userID']. "'>" . $res['name'] . "</a></td>";
 				echo "<td>" . $res['posts'] . "</td>";
-				echo "<td><a href='$weburl/showuser.php?user=" . $res['userID']. "'><img src='http://localhost:8888/bookface/showimage.php?user=$res[userID]'></a></td>";
+				echo "<td><a href='/showuser.php?user=" . $res['userID']. "'><img src='/showimage.php?user=$res[userID]'></a></td>";
 				echo "</tr></a>\n";
 			}
 			echo "</table>\n";

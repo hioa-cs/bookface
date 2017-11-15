@@ -2,13 +2,13 @@
 <HEAD>
     <LINK href="stylesheet.css" rel="stylesheet" type="text/css">
   </HEAD>
-<!-- bookface version 3 -->
+<!-- bookface version 4 -->
 <?php
    $starttime = time();
    include_once "config.php";
    echo "\n<table class=headertable>\n<tr>";
    echo "<td class=header ><td class=header>";
-   echo "<h1 class=header><a class=title href='$weburl'>bookface</a></h1>";
+   echo "<h1 class=header><a class=title href='/index.php'>bookface</a></h1>";
    echo "</tr></table>\n";
    #	echo "<h1>BookFace</h1>\n";	
    
@@ -79,8 +79,8 @@
 	   }
 	   $alternator++;
 	   echo "<tr >\n";
-	   echo "<td $style ><a href='$weburl/showuser.php?user=" . $res['userID']. "'><img src='$weburl/showimage.php?user=$res[userID]'></a></td>";
-	   echo "<td $style ><a href='$weburl/showuser.php?user=" . $res['userID']. "'>" . $res['name'] . "</a></td>";
+	   echo "<td $style ><a href='/showuser.php?user=" . $res['userID']. "'><img src='/showimage.php?user=$res[userID]'></a></td>";
+	   echo "<td $style ><a href='/showuser.php?user=" . $res['userID']. "'>" . $res['name'] . "</a></td>";
 	   echo "<td $style >" . $res['posts'] . "</td>";
 	   
 	   echo "</tr></a>\n";
