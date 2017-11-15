@@ -1,48 +1,7 @@
 <?php
 	$user = $_GET['user'];
-#	include "config.php";
-	$dbport; # = 8889;
-$dbhost; # = "localhost";
-$db; # = "bookface";
-$dbuser; #;  = 'bfuser';
-$dbpassw; # = 'bfuserpassword';
-#$webhost = 'localhost:8888';
+	include_once "config.php";
 
-$memcache_enabled = 0;
-$picture_of_user = 0;
-$memcache = 0;
-$memcache_server;
-
-$confarray = file("config.php");
-foreach ( $confarray as $confline){
-	if ( preg_match('/^\s*\$dbhost\s+=\s+("|\')(.*)("|\')/',$confline,$matches) ){
-#		echo "dbhost: " . $confline . "$matches[2]";
-		$dbhost = $matches[2];
-	} elseif ( preg_match('/^\s*\$dbport\s+=\s+("|\')(.*)("|\')/',$confline,$matches) ){
-#		echo "dbhost: " . $confline . "$matches[2]";
-		$dbport = $matches[2];
-	} elseif ( preg_match('/^\s*\$dbuser\s+=\s+("|\')(.*)("|\')/',$confline,$matches) ){
-#		echo "dbhost: " . $confline . "$matches[2]";
-		$dbuser = $matches[2];
-	} elseif ( preg_match('/^\s*\$dbpassw\s+=\s+("|\')(.*)("|\')/',$confline,$matches) ){
-#		echo "dbhost: " . $confline . "$matches[2]";
-		$dbpassw = $matches[2];
-	} elseif ( preg_match('/^\s*\$db\s+=\s+("|\')(.*)("|\')/',$confline,$matches) ){
-#		echo "dbhost: " . $confline . "$matches[2]";
-		$db = $matches[2];
-	} elseif ( preg_match('/^\s*\$memcache\_enabled\_pictures\s+=\s+("|\'|)(.*)("|\'|)/',$confline,$matches) ){
-#		echo "dbhost: " . $confline . "$matches[2]";
-		$memcache_enabled = $matches[2];
-	} elseif ( preg_match('/^\s*\$replica\_dbhost\s+=\s+("|\'|)(.*)("|\'|)/',$confline,$matches) ){
-#		echo "dbhost: " . $confline . "$matches[2]";
-		$replica_dbhost = $matches[2];
-	} elseif ( preg_match('/^\s*\$memcache\_server\s+=\s+("|\')(.*)("|\')/',$confline,$matches) ){
-#		echo "dbhost: " . $confline . "$matches[2]";
-		$memcache_server = $matches[2];
-	}
-
-	
-}
 #	echo "host: $dbhost, $dbport, $dbuser, $dbpassw<br>";
 if ( isset($replica_dbhost) ){
      $dbhost = $replica_dbhost;
