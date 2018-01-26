@@ -5,17 +5,17 @@
 <?php
 	$user = $_GET['user'];
 include_once "config.php";
-	$link = mysql_connect($host, 'bfuser', 'bfuserpassword');
+	$link = mysqli_connect($host, 'bfuser', 'bfuserpassword');
 	if ($link){
     #	echo "Connection successful!\n<br>";
-    	$bfdb = mysql_select_db($db,$link);
+    	$bfdb = mysqli_select_db($link,$db);
     	if ( !$bfdb ){
-				echo "Cannot use $db: " . mysql_error() ."<br>";
+				echo "Cannot use $db: " . mysqli_error() ."<br>";
     	} else {
 	#		echo "Correct database found<br>\n";
-			$result = mysql_query("select userID,name,status,posts,comments from user");
+			$result = mysqli_query($link, "select userID,name,status,posts,comments from user");
 			echo "<table>\n";
-			while ( $res = mysql_fetch_array($result) ){
+			while ( $res = mysqli_fetch_array($result) ){
 				echo "<tr>\n";
 				echo "<td><a href='/showuser.php?user=" . $res['userID']. "'>" . $res['name'] . "</a></td>";
 				echo "<td>" . $res['posts'] . "</td>";

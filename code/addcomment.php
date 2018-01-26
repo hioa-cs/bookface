@@ -5,13 +5,13 @@
 	$postID = $_GET['postID'];
 	
 	include_once "config.php";
-    $link = mysql_connect("$dbhost:$dbport", $dbuser,$dbpassw );
+    $link = mysqli_connect("$dbhost:$dbport", $dbuser, $dbpassw);
     echo "Connecting to db at $dbhost:$dbport<br>\n";
 	if ($link){
     	echo "Connection successful!\n<br>";
-    	$bfdb = mysql_select_db($db,$link);
+    	$bfdb = mysqli_select_db($link,$db);
     	if ( !$bfdb ){
-				echo "Cannot use $db: " . mysql_error() ."<br>";
+				echo "Cannot use $db: " . mysqli_error() ."<br>";
     	} else {
 			echo "Correct database found<br>\n";
 	    if ( isset($_GET['nomemcache'])) {
@@ -23,15 +23,15 @@
     			$memcache->addServer ( $memcache_server,"11211" );
 			}
 
-			$result = mysql_query("insert into comments (text,userID,postID ) values('$post','$user','$postID' );");
+			$result = mysqli_query($link, "insert into comments (text,userID,postID ) values('$post','$user','$postID' );");
 			if ( isset($memcache) and $memcache ){
 				$key = "comments_on_$postID";
 				$memcache->delete($key);
 			}
-			 if ( ! mysql_error()){
+			 if ( ! mysqli_error()){
 			  echo "OK";
 			} else {
-				mysql_error();
+				mysqli_error();
 			}	
 		}
 	}

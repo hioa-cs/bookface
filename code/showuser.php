@@ -18,14 +18,14 @@
        $dbhost = $replica_dbhost;
    }
 
-	$link = mysql_connect("$dbhost:$dbport", $dbuser,$dbpassw );
+	$link = mysqli_connect("$dbhost:$dbport", $dbuser,$dbpassw );
 
 
 	if ($link){
 #    	 echo "Connection successful!\n<br>";
-    	$bfdb = mysql_select_db($db,$link);
+    	$bfdb = mysqli_select_db($link,$db);
     	if ( !$bfdb ){
-				echo "Cannot use $db: " . mysql_error() ."<br>";
+				echo "Cannot use $db: " . mysqli_error() ."<br>";
     	} else {
 	    $memcache_override = 0;
 	    if ( isset($_GET['nomemcache'])){
@@ -39,8 +39,8 @@
     			$memcache->addServer ( $memcache_server,"11211" );
 			}
 #			echo "Correct database found ( $dbhost:$dbport , $dbuser , $webhost)<br>\n";
-			$result = mysql_query("select name,status,posts,comments,createDate from user where userID = $user");
-			$res = mysql_fetch_array($result);
+			$result = mysqli_query($link, "select name,status,posts,comments,createDate from user where userID = $user");
+			$res = mysqli_fetch_array($result);
 
 			echo "\n<table class=headertable>\n<tr>";
 			echo "<td class=header ><img src='/showimage.php?user=$user'><td class=header>";
@@ -57,8 +57,8 @@
     			echo "<! No memcache object found: posts_by_$user !>\n";
 				$posts_by_user = array();
     			$sql = "select postID,text,postDate from posts where userID = $user order by postDate desc;";
-    			$res = mysql_query($sql);
-    			while($rec = mysql_fetch_assoc($res)){
+    			$res = mysqli_query($link, $sql);
+    			while($rec = mysqli_fetch_assoc($res)){
         			$posts_by_user[] = $rec;
     			}
     // cache for 10 minutes
@@ -67,7 +67,7 @@
 				}	
 			}
 			
-#			$posts = mysql_query("select postID,text,postDate from posts where userID = $user order by postDate desc;");
+#			$posts = mysqli_query($link, "select postID,text,postDate from posts where userID = $user order by postDate desc;");
 			$postcount = 0;
 			$table = "<table>\n";
 	    if ( isset($posts_by_user) ){
@@ -84,8 +84,8 @@
     					echo "<! No memcache object for comment found: $key !>\n";
 						$comments_on_post = array();
     					$sql = "select commentID,text,userID,postDate from comments where postID = " . $res['postID'] . " order by postDate asc;";
-    					$res = mysql_query($sql);
-    					while($rec = mysql_fetch_assoc($res)){
+    					$res = mysqli_query($link, $sql);
+    					while($rec = mysqli_fetch_assoc($res)){
         					$comments_on_post[] = $rec;
     					}
     // cache for 10 minutes
@@ -94,13 +94,13 @@
 				}	
 			}
 					
-			#		$comments = mysql_query("select commentID,text,userID,postDate from comments where postID = " . $res['postID'] . " order by postDate asc;");
+			#		$comments = mysqli_query($link, "select commentID,text,userID,postDate from comments where postID = " . $res['postID'] . " order by postDate asc;");
 
 					if ( count($comments_on_post) > 0 ){
 						$table .= "</table>\n<table class=commentrow>\n";
 						foreach ( $comments_on_post as $cres ){
-								$users = mysql_query("select name from user where userID = $cres[userID]");
-								$ures = mysql_fetch_array($users);
+								$users = mysqli_query($link, "select name from user where userID = $cres[userID]");
+								$ures = mysqli_fetch_array($link, $users);
 								$table .= "<tr  ><td class=commentpost >" . $cres['postDate'] . "</td><td><a href='/showuser.php?user=" . $cres['userID']. "'><img src='/showimage.php?user=".$cres['userID'] ."'></a></td><td><b><a href='/showuser.php?user=" . $cres['userID']. "'>" . $ures['name'] . ": </a></b></td><td>" . $cres['text'] . "</td></tr>";
 							
 						}

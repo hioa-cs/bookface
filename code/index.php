@@ -15,12 +15,12 @@
    if ( isset($replica_dbhost) ){
        $dbhost = $replica_dbhost;
    }
-   $link = mysql_connect("$dbhost:$dbport", $dbuser, $dbpassw);
+   $link = mysqli_connect("$dbhost:$dbport", $dbuser, $dbpassw);
    if ($link){
    #    	echo "Connection successful!\n<br>";
-   $bfdb = mysql_select_db($db,$link);
+   $bfdb = mysqli_select_db($link,$db);
    if ( !$bfdb ){
-     echo "Cannot use $db: " . mysql_error() ."<br>";
+     echo "Cannot use $db: " . mysqli_error() ."<br>";
    } else {
    $memcache_override = 0;
    if ( isset($_GET['nomemcache'])){
@@ -35,16 +35,16 @@
        }
        
        #			echo "Correct database found<br>\n";
-       $result = mysql_query("select count(userID) from user;");
+       $result = mysqli_query($link, "select count(userID) from user;");
        echo "<table>\n";
-       $row = mysql_fetch_row($result);
+       $row = mysqli_fetch_row($result);
        echo "<tr><td>Users: </td><td>" . $row[0] . "</td></tr>\n";
-       $result = mysql_query("select count(postID) from posts;");
-       $row = mysql_fetch_row($result);
+       $result = mysqli_query($link, "select count(postID) from posts;");
+       $row = mysqli_fetch_row($result);
        #			echo "posts: " . $row[0] . "<br>\n";
        echo "<tr><td>Posts: </td><td>" . $row[0] . "</td></tr>\n";
-       $result = mysql_query("select count(userID) from comments;");
-       $row = mysql_fetch_row($result);
+       $result = mysqli_query($link, "select count(userID) from comments;");
+       $row = mysqli_fetch_row($result);
        echo "<tr><td>Comments: </td><td>" . $row[0] . "</td></tr>\n";
        echo "</table>\n";
        $user_list_for_front_page = array();       
@@ -60,8 +60,8 @@
 	       if ( isset($frontpage_limit) ){
 	         $sql = $sql . " limit $frontpage_limit";
 	       }
-	       $res = mysql_query($sql);
-	       while($rec = mysql_fetch_assoc($res)){
+	       $res = mysqli_query($link, $sql);
+	       while($rec = mysqli_fetch_assoc($res)){
 	         $user_list_for_front_page[] = $rec;
     	   }
 	   // cache for 10 minutes
