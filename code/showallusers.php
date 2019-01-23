@@ -10,7 +10,7 @@ include_once "config.php";
     #	echo "Connection successful!\n<br>";
     	$bfdb = mysqli_select_db($link,$db);
     	if ( !$bfdb ){
-				echo "Cannot use $db: " . mysqli_error() ."<br>";
+				echo "Cannot use $db: " . mysqli_error($link) ."<br>";
     	} else {
 	#		echo "Correct database found<br>\n";
 			$result = mysqli_query($link, "select userID,name,status,posts,comments from user");

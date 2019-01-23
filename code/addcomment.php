@@ -11,7 +11,7 @@
     	echo "Connection successful!\n<br>";
     	$bfdb = mysqli_select_db($link,$db);
     	if ( !$bfdb ){
-				echo "Cannot use $db: " . mysqli_error() ."<br>";
+				echo "Cannot use $db: " . mysqli_error($link) ."<br>";
     	} else {
 			echo "Correct database found<br>\n";
 	    if ( isset($_GET['nomemcache'])) {
@@ -28,10 +28,10 @@
 				$key = "comments_on_$postID";
 				$memcache->delete($key);
 			}
-			 if ( ! mysqli_error()){
+			 if ( ! mysqli_error($link)){
 			  echo "OK";
 			} else {
-				mysqli_error();
+				mysqli_error($link);
 			}	
 		}
 	}

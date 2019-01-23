@@ -20,7 +20,7 @@
    #    	echo "Connection successful!\n<br>";
    $bfdb = mysqli_select_db($link,$db);
    if ( !$bfdb ){
-     echo "Cannot use $db: " . mysqli_error() ."<br>";
+     echo "Cannot use $db: " . mysqli_error($link) ."<br>";
    } else {
    $memcache_override = 0;
    if ( isset($_GET['nomemcache'])){
