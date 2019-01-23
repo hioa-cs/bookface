@@ -5,7 +5,7 @@
 <?php
 	$user = $_GET['user'];
 include_once "config.php";
-	$link = mysqli_connect($host, 'bfuser', 'bfuserpassword');
+	$link = mysqli_connect($host,$dbuser,$dbpasswd);
 	if ($link){
     #	echo "Connection successful!\n<br>";
     	$bfdb = mysqli_select_db($link,$db);
