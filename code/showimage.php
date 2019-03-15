@@ -6,12 +6,12 @@
 if ( isset($replica_dbhost) ){
      $dbhost = $replica_dbhost;
 }
-$link = mysqli_connect("$dbhost:$dbport", $dbuser,$dbpassw );
+$link = mysql_connect("$dbhost:$dbport", $dbuser,$dbpassw );
 if ($link){
  #   	echo "Connection successful!\n<br>";
-    	$bfdb = mysqli_select_db($link,$db);
+    	$bfdb = mysql_select_db($db,$link);
     	if ( !$bfdb ){
-#				echo "Cannot use $db: " . mysqli_error() ."<br>";
+#				echo "Cannot use $db: " . mysql_error() ."<br>";
     	} else {
 	    $memcache_override = 0;
 	    if ( isset($_GET['nomemcache'])){
@@ -34,8 +34,8 @@ if ($link){
 #    					error_log("No memcache object for image with key: $key, memcache is $memcache_enabled and pictures are $memcache_enabled_pictures");
 						$picture_of_user = array();
     					$sql = "select picture from user where userID = $user";
-    					$res = mysqli_query($link, $sql);
-    					while($rec = mysqli_fetch_assoc($res)){
+    					$res = mysql_query($sql);
+    					while($rec = mysql_fetch_assoc($res)){
         					$picture_of_user[] = $rec;
     		                         }
     // cache for 10 minutes
@@ -44,8 +44,8 @@ if ($link){
 					    $memcache->set($key, $picture_of_user,0,6000);
 				         }
 			}
-		#	$result = mysqli_query($link, "select picture from user where userID = $user");
-		#	$res = mysqli_fetch_array($result);
+		#	$result = mysql_query("select picture from user where userID = $user");
+		#	$res = mysql_fetch_array($result);
 			header("Content-type: image/png");
 			foreach ( $picture_of_user as $res ){
 				echo $res['picture'];
