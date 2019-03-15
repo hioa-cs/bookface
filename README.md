@@ -38,7 +38,7 @@ You should verify that the conenction works manually using the mysql client with
 On the webserver hosts, install apache2 and the neccesary dependancies:
 
 ```
-apt-get install apache2 libapache2-mod-php5 php5-mysql
+apt-get install apache2 libapache2-mod-php php-mysql
 ```
 
 # Bookface installation instructions
