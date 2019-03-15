@@ -8,18 +8,14 @@ echo "image:" . $image . "<br>\n";
 include_once "config.php";
 try {
     $dbh = new PDO('pgsql:host=' . $dbhost . ";port=" . $dbport . ";dbname=" . $db . ';sslmode=disable',$dbuser, null, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => true,));
-    $pathToFile = "58.jpg";
-    if (!file_exists($pathToFile)) {
-	            throw new \Exception("File %s not found.");
-    }
 #    $fileData = $dbh->pgsqlLOBCreate();
 #    $stream = $this->pdo->pgsqlLOBOpen($fileData, 'w');
 #    $fh = fopen($pathToFile, 'rb');
 #    stream_copy_to_stream($fh, $stream);
                 //
-    $fh = null;
-    $stream = null;
-    $img = file_get_contents($image);
+#    $fh = null;
+#    $stream = null;
+#    $img = file_get_contents($image);
     $query =  "insert into users (name,picture,status,posts,comments) values(:username,:image,'',0,0 );";
     $stmt = $dbh->prepare($query);
     $stmt->execute([

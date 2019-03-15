@@ -21,4 +21,4 @@ services:
     networks:
         - webnet
     deploy:
-      replicas: 3
+      replicas: 1
