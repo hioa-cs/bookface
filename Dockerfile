@@ -8,7 +8,7 @@ RUN rm /var/www/html/index.html
 
 ADD code/* /var/www/html/
 ADD config.php /var/www/html
-
+ADD init.sh /
 EXPOSE 80
 
 ENTRYPOINT ["/init.sh"]
