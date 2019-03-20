@@ -20,5 +20,15 @@ services:
       - "80"
     networks:
         - webnet
+
+    environment:
+      BF_MEMCACHE_SERVER: memcache
+
     deploy:
-      replicas: 1
+      replicas: 3
+
+  memcache:
+    image: memcached
+
+    networks:
+      - webnet
