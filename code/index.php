@@ -66,11 +66,11 @@ try {
     
     if ( empty($user_list_for_front_page) ) {
 
-	$sql = "select userID,name,status,posts,comments,lastPostDate from users order by lastPostDate desc";
+	$sql = "select userID,name,status,posts,comments,lastPostDate,picture from users order by lastPostDate desc";
 	if ( isset($frontpage_limit) ){
 	    $sql = $sql . " limit $frontpage_limit";
 	}
-	$res = $dbh->query($sql);
+	# $res = $dbh->query($sql);
 	foreach ($dbh->query($sql) as $rec)
 	  $user_list_for_front_page[] = $rec;
     }
@@ -89,7 +89,7 @@ try {
 	}
 	$alternator++;
 	echo "<tr >\n";
-	echo "<td $style ><a href='/showuser.php?user=" . $res['userid']. "'><img src='/showimage.php?user=$res[userid]'></a></td>";
+	echo "<td $style ><a href='/showuser.php?user=" . $res['userid']. "'><img src='/images/" . $res['picture'] . "'></a></td>";
 	echo "<td $style ><a href='/showuser.php?user=" . $res['userid']. "'>" . $res['name'] . "</a></td>";
 	echo "<td $style >" . $res['posts'] . "</td>";
 	

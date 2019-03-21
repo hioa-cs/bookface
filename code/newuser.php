@@ -1,26 +1,38 @@
 <HTML>
 <?PHP
+
+function generateRandomString($length = 30) {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+	            $randomString .= $characters[rand(0, $charactersLength - 1)];
+	}
+        return $randomString;
+}
+
 error_reporting(E_ALL);
 $username = $_GET['user'];
 $image = $_GET['image'];
 echo "Creating user: " . $username . "<br>";
 echo "image:" . $image . "<br>\n";
 include_once "config.php";
+
+
+
 try {
     $dbh = new PDO('pgsql:host=' . $dbhost . ";port=" . $dbport . ";dbname=" . $db . ';sslmode=disable',$dbuser, null, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => true,));
-#    $fileData = $dbh->pgsqlLOBCreate();
-#    $stream = $this->pdo->pgsqlLOBOpen($fileData, 'w');
-#    $fh = fopen($pathToFile, 'rb');
-#    stream_copy_to_stream($fh, $stream);
-                //
-#    $fh = null;
-#    $stream = null;
+#    $img = imagecreatefromjpeg($image);
+    $imagestring = generateRandomString() . ".jpg";
+#    imagejpeg($img, "images/file.jpg");
 #    $img = file_get_contents($image);
+    file_put_contents("images/" . $imagestring, file_get_contents($image));
+
     $query =  "insert into users (name,picture,status,posts,comments) values(:username,:image,'',0,0 );";
     $stmt = $dbh->prepare($query);
     $stmt->execute([
 		    ':username' => $username,
-		    ':image' => $image,
+		    ':image' => $imagestring,
 		    ]);
 
 } catch (Exception $e) {
