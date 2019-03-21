@@ -29,11 +29,11 @@ You have to repeat these steps ON ALL nodes in your swarm!
 
 2. Install the volume driver plugin:
 
-´´´
+```
 docker plugin install --alias gluster trajano/glusterfs-volume-plugin --grant-all-permissions --disable
 docker plugin set gluster SERVERS=gluster-1,gluster-2,gluster-3
 docker plugin enable gluster
-´´´
+```
 
 3. Start the bf stack
 
