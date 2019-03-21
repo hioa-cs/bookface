@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.4'
 
 configs:
   bf_config:
@@ -8,6 +8,12 @@ networks:
   webnet:
     external:
       name: roach_cockroachdb
+
+volumes:
+  bf_images:
+    driver: gluster
+    name: "images"
+    
 
 services:
   web:
@@ -23,7 +29,9 @@ services:
 
     environment:
       BF_MEMCACHE_SERVER: memcache
-
+    volumes:
+      - bf_images:/var/www/html/images
+    
     deploy:
       replicas: 1
 
