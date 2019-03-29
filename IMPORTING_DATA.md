@@ -21,10 +21,11 @@ In order to protect your new system from others pushing data into yours, you fir
 
 I'm assuming you are running cockroachdb on the new system. Start by opening a console to it. Do this from the docker master:
 
-´´´
+```
 docker run -it --rm --network=roach_cockroachdb cockroachdb/cockroach:v2.1.6 sql --host=cockroachdb-1 --insecure
-´´´
+```
 Inside the console, execute the following ( change 'yoursecretkey' with something else ):
+
 ```
 use bf;
 CREATE table config ( key STRING(100), value STRING(500) );
@@ -42,7 +43,8 @@ Assuming your new systems IP is 192.168.128.223 with a port number 30002, and yo
 
 ```
 time curl -v 'http://192.168.128.223:30002/import.php?entrypoint=192.168.128.33&key=yoursecretkey'
-``
+```
+
 Notice the use of single quotes around the URL in order to avoid confusion due to the "&" symbol used to sepparate variables.
 
 This process will take some time, and you can keep track as you watch the output from the curl command.
