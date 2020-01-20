@@ -17,7 +17,7 @@ volumes:
 
 services:
   web:
-    image: docker.cs.hioa.no/kyrrepublic/bf:latest
+    image: dock01:5000/bf:v4
 
     configs:
       - source: bf_config
@@ -29,6 +29,7 @@ services:
 
     environment:
       BF_MEMCACHE_SERVER: memcache
+      BF_FRONTPAGE_LIMIT: 10
     volumes:
       - bf_images:/var/www/html/images
     

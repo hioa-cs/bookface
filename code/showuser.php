@@ -34,8 +34,8 @@ try {
     $stmt = $dbh->query("select name,status,posts,comments,createdate,picture from users where userid = $user");   
     $res = $stmt->fetch(PDO::FETCH_ASSOC);
     echo "\n<table class=headertable>\n<tr>";
-    echo "<td class=header ><img src='/images/" . $res['picture'] . "'><td class=header>";
-    echo "<h2 class=hader>" . $res['name'] . "</h2>";
+    echo "<td class=header ><img src='/images/" . trim($res['picture']) . "'><td class=header>";
+    echo "<h2 class=hader>" . trim($res['name']) . "</h2>";
     echo "</tr></table>\n";
     echo "<b>Member since: " . $res['createdate'] . " posts: " . $res['posts'] . "</b><br>\n";						
     
@@ -90,7 +90,7 @@ try {
 		    $stmt = $dbh->query("select name,picture from users where userid = $cres[userid]");
 		    $ures = $stmt->fetch(PDO::FETCH_ASSOC);
 		    
-		    $table .= "<tr  ><td class=commentpost >" . $cres['postdate'] . "</td><td><a href='/showuser.php?user=" . $cres['userid']. "'><img src='/images/".$ures['picture'] ."'></a></td><td><b><a href='/showuser.php?user=" . $cres['userid']. "'>" . $ures['name'] . ": </a></b></td><td>" . $cres['text'] . "</td></tr>";
+		    $table .= "<tr  ><td class=commentpost >" . $cres['postdate'] . "</td><td><a href='/showuser.php?user=" . $cres['userid']. "'><img src='/images/".trim($ures['picture']) ."'></a></td><td><b><a href='/showuser.php?user=" . $cres['userid']. "'>" . trim($ures['name']) . ": </a></b></td><td>" . $cres['text'] . "</td></tr>";
 		    
 		}
 		$comments_on_post = array();
