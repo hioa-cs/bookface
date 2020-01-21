@@ -5,8 +5,14 @@
 <?php
 
 $user = $_GET['user'];
+$use_file_store_for_images = 0;
 include_once "config.php";
-	
+
+if(isset($_GET['use_file_store_for_images'])){
+    $use_file_store_for_images = 1;
+}
+
+
 echo "\n<table class=headertable>\n<tr>";
 echo "<td class=header ><td class=header>";
 echo "<h1 class=header><a class=title href='/index.php'>bookface</a></h1>";
@@ -34,7 +40,11 @@ try {
     $stmt = $dbh->query("select name,status,posts,comments,createdate,picture from users where userid = $user");   
     $res = $stmt->fetch(PDO::FETCH_ASSOC);
     echo "\n<table class=headertable>\n<tr>";
-    echo "<td class=header ><img src='/images/" . trim($res['picture']) . "'><td class=header>";
+    if ( $use_file_store_for_images ){
+	echo "<td class=header ><img src='/images/" . trim($res['picture']) . "'><td class=header>";
+    } else {
+	echo "<td class=header ><img src='/showimage.php?user=" . $user . "'><td class=header>";
+    }
     echo "<h2 class=hader>" . trim($res['name']) . "</h2>";
     echo "</tr></table>\n";
     echo "<b>Member since: " . $res['createdate'] . " posts: " . $res['posts'] . "</b><br>\n";						

@@ -1,6 +1,10 @@
 <?php
-	$user = $_GET['user'];
-	include_once "config.php";
+$user = $_GET['user'];
+include_once "config.php";
+$use_file_store_for_images = 0;
+if(isset($_GET['use_file_store_for_images'])){
+    $use_file_store_for_images = 1;
+}
 
 if ( isset($replica_dbhost) ){
      $dbhost = $replica_dbhost;
@@ -26,10 +30,30 @@ try {
 
     if( $picture_of_user == false){
 	$picture_of_user = "";
-    	$sql = "select picture from users where userid = $user";
-	$stmt = $dbh->query($sql);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-	$picture_of_user = file_get_contents("images/" . $row["picture"]);
+	if( $use_file_store_for_images ){
+	    $sql = "select picture from users where userid = $user";
+	    $stmt = $dbh->query($sql);
+	    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+	    $picture_of_user = file_get_contents("images/" . $row["picture"]);
+	} else {
+	    $sql = "select picture from users where userid = $user";
+	    $stmt = $dbh->query($sql);
+	    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+	    
+	    $image_query = "select picture from pictures where pictureid = '" . $row["picture"] . "'";
+	    # echo $image_query . "\n";
+	    $stmt = $dbh->query($image_query);
+	    $imagerow = $stmt->fetch(PDO::FETCH_ASSOC);
+#	    print_r($imagerow);
+	    
+	    ob_start();
+	    fpassthru($imagerow["picture"]);
+	   
+	    
+	    $picture_of_user = ob_get_contents();
+	    ob_end_clean();
+	    #echo $picture_of_user;
+	}
     }
         // cache for 10 minutes
     if ( $memcache ){

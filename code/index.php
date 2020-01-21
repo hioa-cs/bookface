@@ -2,14 +2,19 @@
 <HEAD>
     <LINK href="stylesheet.css" rel="stylesheet" type="text/css">
   </HEAD>
-     <!-- bookface version 8 -->
+     <!-- bookface version 9 -->
 <?php
 $starttime = time();
+$use_file_store_for_images = 0;
 include_once "config.php";
 echo "\n<table class=headertable>\n<tr>";
 echo "<td class=header ><td class=header>";
 echo "<h1 class=header><a class=title href='/index.php'>bookface</a></h1>";
 echo "</tr></table>\n";
+
+if(isset($_GET['use_file_store_for_images'])){
+    $use_file_store_for_images = 1;
+}
 
 
 if ( isset($replica_dbhost) ){
@@ -166,7 +171,11 @@ try {
 	}
 	$alternator++;
 	echo "<tr >\n";
-	echo "<td $style ><a href='/showuser.php?user=" . $res['userid']. "'><img src='/images/" . trim($res['picture']) . "'></a></td>";
+	if ( $use_file_store_for_images ){
+	    echo "<td $style ><a href='/showuser.php?user=" . $res['userid']. "'><img src='/images/" . trim($res['picture']) . "'></a></td>";
+	} else {
+	    echo "<td $style ><a href='/showuser.php?user=" . $res['userid']. "'><img src='/showimage.php?user=" . trim($res['userid']) . "'></a></td>";
+	}
 	echo "<td $style ><a href='/showuser.php?user=" . $res['userid']. "'>" . trim($res['name']) . "</a></td>";
 	echo "<td $style >" . $res['posts'] . "</td>";
 	
