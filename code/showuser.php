@@ -99,8 +99,13 @@ try {
 		foreach ( $comments_on_post as $cres ){
 		    $stmt = $dbh->query("select name,picture from users where userid = $cres[userid]");
 		    $ures = $stmt->fetch(PDO::FETCH_ASSOC);
-		    
-		    $table .= "<tr  ><td class=commentpost >" . $cres['postdate'] . "</td><td><a href='/showuser.php?user=" . $cres['userid']. "'><img src='/images/".trim($ures['picture']) ."'></a></td><td><b><a href='/showuser.php?user=" . $cres['userid']. "'>" . trim($ures['name']) . ": </a></b></td><td>" . $cres['text'] . "</td></tr>";
+		    if ( $use_file_store_for_images ){
+			$table .= "<tr  ><td class=commentpost >" . $cres['postdate'] . "</td><td><a href='/showuser.php?user=" . $cres['userid']. "'><img src='/images/".trim($ures['picture']) ."'></a></td><td><b><a href='/showuser.php?user=" . $cres['userid']. "'>" . trim($ures['name']) . ": </a></b></td><td>" . $cres['text'] . "</td></tr>";
+		    } else {
+			$table .= "<tr  ><td class=commentpost >" . $cres['postdate'] . "</td><td><a href='/showuser.php?user=" . $cres['userid']. "'><img src='/showimage.php?user=".trim($cres['userid']) ."'></a></td><td><b><a href='/showuser.php?user=" . $cres['userid']. "'>" . trim($ures['name']) . ": </a></b></td><td>" . $cres['text'] . "</td></tr>";
+		    }
+
+
 		    
 		}
 		$comments_on_post = array();
