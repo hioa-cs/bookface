@@ -1,5 +1,4 @@
-# Welcome to bookface, a fake social media site for learning about web
-architectures
+# Welcome to bookface, a fake social media site for learning about web architectures
 
 This site is meant as an educational tool for learning to set up and manage 'big web' applications. The code is not meant to run in production. It is meant to let aspiring sysadmins experience several fault-scenarios so they can improve their skills. 
 
@@ -11,7 +10,7 @@ for the webserver can be repeated on multiple webservers who are
 behind a load-balancer, but we do not cover the steps of setting up
 the load-balancer itself here.
 
-We assume that Ubuntu 18.04 is used as a base system.
+**We assume that Ubuntu 18.04 is used as a base system.**
 
 # Setting up the database (CockroachDB)
 
@@ -57,7 +56,7 @@ go to the next step.
 Until now, we have only installed the datase, but we are not running
 it. Before we start it, let's think about where all the data should be
 stored. All persistent databases need somewhere to store all their
-stuff. Let's create a folder for it, called '/bfdata' which will
+stuff. Let's create a folder for it, called `/bfdata` which will
 reside at the root of the filesystem. You are free to use whatever
 folder you want, just make sure that the root user (or whatever other
 user you wish to use to run the database) has read/write access to it.
@@ -70,9 +69,9 @@ Next, let's start the database:
 ```
 cockroach start --insecure --store=/bfdata --listen-addr=0.0.0.0:26257 --http-addr=0.0.0.0:8080 --background
 ```
-You can see, that the '/bfdata' folder is present, which is good. In
+You can see, that the `/bfdata` folder is present, which is good. In
 addition, you see that we specify to addresses that the database will
-listen to. The first one is '0.0.0.0:26257' and means that port 26257
+listen to. The first one is `0.0.0.0:26257` and means that port 26257
  will be available on all network interfaces and that is the port
 every database client will try to reach. The other one is for the
 dasbboard, which is specified to be available on port 8080. 
@@ -125,7 +124,7 @@ CREATE table comments ( commentID INT PRIMARY KEY DEFAULT unique_rowid(), postID
 CREATE table pictures ( pictureID STRING(300), picture BYTES );
 ```
 
-You can end the session by typing ```èxit``` and hitting enter.
+You can end the session by typing `exit` and hitting enter.
 
 # Setting up a webserver
 
@@ -140,7 +139,7 @@ apt-get install apache2 libapache2-mod-php php-pgsql
 You should be able to see that the apache2 webserver is running using our two trusty commands `ps` and `netstat`. Apache listens on port 80. You can also browse the IP address of the webserver in order to verify that you can see a standard apache welcome page.
 
 
-Make sure you have git installed. This can be done with ```apt-get install git```, but it is normally present.
+Make sure you have git installed. This can be done with `apt-get install git`, but it is normally present.
 
 The code is downloaded from a git repository like this:
 ```
@@ -207,4 +206,5 @@ Likewise, in a web-browser you should se a relatively bare but
 functioning website. Again, the number og users, posts and comments
 should be zero.
 
-
+If you got to this point, then you are done with your basic setup and
+are ready for accepting users!
