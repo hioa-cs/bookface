@@ -126,6 +126,19 @@ CREATE table pictures ( pictureID STRING(300), picture BYTES );
 
 You can end the session by typing `exit` and hitting enter.
 
+## Viewing the CockroachDB dashboard
+
+As mentioned earlier, an attractive feature of CockroachDB is its
+web-based dashboard. This provides valuable insight into how the
+database sees the world. We can see what queries are executed and how
+long they take.
+
+The dashboard is available on port 8080, since that was the port
+chosen above. However, since the database does not (and should not)
+have a floating IP, it is not available from the outside. One
+therefore needs to use a tool such as FoxyProxy to browse the dashboard.
+
+
 # Setting up a webserver
 
 In this sections, we'll set up a webserver, which will hold the actual PHP code.
