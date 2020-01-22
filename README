@@ -1,78 +1,210 @@
-# Welcome to bookface, a social website for the 15th century
+# Welcome to bookface, a fake social media site for learning about web
+architectures
 
 This site is meant as an educational tool for learning to set up and manage 'big web' applications. The code is not meant to run in production. It is meant to let aspiring sysadmins experience several fault-scenarios so they can improve their skills. 
 
-# Installing dependencies (Assumes Ubuntu 14.04)
+There are many different ways bookface can be deployed. This tutorial
+goes through a simple setup using the two core components: a webserver
+and a database. You can do everything on a single host or on sepparate
+hosts, where one is a webserver and the other the database. The steps
+for the webserver can be repeated on multiple webservers who are
+behind a load-balancer, but we do not cover the steps of setting up
+the load-balancer itself here.
 
-As a minimum requirement, bookface needs a MySQL database and a webserver with PHP installed as well as the proper libraries for PHP to communicate with the database. The database can be sepparated from the web server and you can have several webservers connected through a loadbalancer.
+We assume that Ubuntu 18.04 is used as a base system.
+
+# Setting up the database (CockroachDB)
+
+Bookface assumes a database within the Postgres family. In this case
+we'll use CockroachDB, which is a modern database designed for large
+deployments. One nice feature with this database, is that it comes
+with a useful web-based status dashboard, which is quite useful when
+you want to learn more about the life of a database.
+CockroachDB actually assumes that you want to start with
+a cluster of three nodes, but we'll settle for only one for now.
 
 All the instructions assume you are root on the machines in question.
 
-## Setting up the database
+## Downloading and installing CockroachDB
 
-First, install the MySQL database.
+You can find the official installation instructions here: 
+https://www.cockroachlabs.com/docs/stable/install-cockroachdb-linux.html
 
-```
-apt-get update
-apt-get install mysql-server
-```
-Log into the database and set up the database with the correct permissions.
+Our instructions are adapted from theirs. At the time of writing, the latest version of the database is 19.2.2.
+Be aware that the version number may have changed, in which case the
+URL below needs to be changed as well.
 
-```
-mysql -u root -p
-```
-
-Inside the database, create the databse and set the permissions:
 
 ```
-create database bookface;
-grant SELECT,UPDATE,INSERT,CREATE on bookface.* to bookfaceuser@127.0.0.1 identified by 'somepassword';
+wget https://binaries.cockroachdb.com/cockroach-v19.2.2.linux-amd64.tgz
+tar xzf cockroach-v19.2.2.linux-amd64.tgz
+cp cockroach-v19.2.2.linux-amd64/cockroach /usr/local/bin
+```
+The three above commands download the latest release as a compressed
+archive. The tar command will extract the archive and finally we copy
+the binary into the folder '/usr/local/bin', which enables us to
+execute the binary as a normal command from the shell. 
+
+You can verify these steps by executing the following command:
+```
+cockroach version
+```
+If you got a summary of the current version and so on, you are good to
+go to the next step.
+
+## Starting the database
+
+Until now, we have only installed the datase, but we are not running
+it. Before we start it, let's think about where all the data should be
+stored. All persistent databases need somewhere to store all their
+stuff. Let's create a folder for it, called '/bfdata' which will
+reside at the root of the filesystem. You are free to use whatever
+folder you want, just make sure that the root user (or whatever other
+user you wish to use to run the database) has read/write access to it.
+
+```
+mkdir /bfdata
 ```
 
-NOTICE: The mysql commads assume that the webserer resides on the same system as the databse. If you have multiple webservers you either have to use a wildcard for the location of the user or add one grant per IP address.
+Next, let's start the database:
+```
+cockroach start --insecure --store=/bfdata --listen-addr=0.0.0.0:26257 --http-addr=0.0.0.0:8080 --background
+```
+You can see, that the '/bfdata' folder is present, which is good. In
+addition, you see that we specify to addresses that the database will
+listen to. The first one is '0.0.0.0:26257' and means that port 26257
+ will be available on all network interfaces and that is the port
+every database client will try to reach. The other one is for the
+dasbboard, which is specified to be available on port 8080. 
 
-You should verify that the conenction works manually using the mysql client with the credentials you defined.
+There are some warnings which are displayd, but that is fine for us
+right now. Please remember, that this tutorial assumes that you are in a safe lab
+environment. We are obviously taking security-shortcuts here in order to get to
+the core of the learning experience. 
 
-## Installing apache2
-
-On the webserver hosts, install apache2 and the neccesary dependancies:
+Once this command has finished, we should be able to see wether the
+database is actually running in the background or not. Here are to
+trusty companions we can use:
 
 ```
-apt-get install apache2 libapache2-mod-php5 php5-mysql
+ps aux | grep cockroach
+netstat -anltp | grep cockroach
 ```
 
-# Bookface installation instructions
+You should be able to see both the running process and that the ports
+are actually opened and being listened on.
 
-Make sure you have git installed. This can be done with ```apt-get install git```
 
-## Downloading the PHP files
+## Initializing the database
+
+Now that the database is running, we need to log in and create the
+user, tables and permissions. The easiest way to access the database,
+is to use the cockroach command itself and open up a session: 
 
 ```
-git clone  https://git.cs.hioa.no/kyrre/bookface.git
+cockroach sql --insecure --host=localhost:26257
+```
+
+Notice that your command prompt has changed now that you have started
+a command console inside the database. Next, you need to run the
+following commands inside the console.
+
+
+In these three commands, we create the database and define a user. There is no password here, so choose a different username if you want to avoid that others accidently log into your database.
+```
+CREATE DATABASE bf;
+CREATE USER bfuser;
+GRANT ALL ON DATABASE bf TO bfuser;
+```
+These commands will set up the tables:
+```
+USE bf;
+CREATE table users ( userID INT PRIMARY KEY DEFAULT unique_rowid(), name STRING(50), picture STRING(300), status STRING(10), posts INT, comments INT, lastPostDate TIMESTAMP DEFAULT NOW(), createDate TIMESTAMP DEFAULT NOW());
+CREATE table posts ( postID INT PRIMARY KEY DEFAULT unique_rowid(), userID INT, text STRING(300), name STRING(150), postDate TIMESTAMP DEFAULT NOW());
+CREATE table comments ( commentID INT PRIMARY KEY DEFAULT unique_rowid(), postID INT, userID INT, text STRING(300),  postDate TIMESTAMP DEFAULT NOW());
+CREATE table pictures ( pictureID STRING(300), picture BYTES );
+```
+
+You can end the session by typing ```èxit``` and hitting enter.
+
+# Setting up a webserver
+
+In this sections, we'll set up a webserver, which will hold the actual PHP code.
+
+On the webserver host, install apache2 and the neccesary dependancies:
+
+```
+apt-get install apache2 libapache2-mod-php php-pgsql
+```
+
+You should be able to see that the apache2 webserver is running using our two trusty commands `ps` and `netstat`. Apache listens on port 80. You can also browse the IP address of the webserver in order to verify that you can see a standard apache welcome page.
+
+
+Make sure you have git installed. This can be done with ```apt-get install git```, but it is normally present.
+
+The code is downloaded from a git repository like this:
+```
+git clone  https://git.cs.hioa.no/kyrre.begnum/bookface.git
 cd bookface
 ```
 
-Replace version_number with the version you are interested in, for example "v1" for the first version.
-
-## Copy the files
-
-Remove the default index.html file and move the main PHP files into apache's document root:
+Now, remove the default index.html file and move the main PHP files into apache's document root:
 
 ```
-cp code/* /var/www/html/
 rm /var/www/html/index.html
+cp code/* /var/www/html/
 ```
+
+One important part of how bookface works, is it's configuration file. This is where you will specify things like where the database is and the public URL will be. The configuration file is read every time a page is requested from a client and this means you can make dynamic changes to this file in order to change the behaviour of the site without restarting anything. However, it also means that an error in this file will cripple the site. It may be a good idea to come up with a scheme to make sure you have backup and some sort of oversight over this file, especially if you have many webservers.
 
 Next, make a copy of the example configuration file. You may want to keep this file sepparate from the git repository, since it can work with several versions of the code.
 
 ```
-cp config_example.php config.php
+cp config_example.php /var/www/html/config.php
 ```
 
-Now, you can edit the config.php file and fill out the variables. If you are using a load balancer or otherwise external IP for your bookface, make sure to use that in your $webhost variable. When the config.php file is complete, copy it to the other PHP files:
+Now, you can edit the config.php file and fill out the variables. 
+Let's assume that the IP address of the database is 192.168.131.23 and we chose bfuser as a username. 
+Let's also assume that the floating/public IP address (assuming you are in a cloud environment) is 10.20.0.43. 
+Let's also assume that the port number of the database is 26257. The config.php file would then look like this: 
+```
+<?php
+$dbhost = "192.168.131.23";
+$dbport = "26257";
+$db = "bf";
+$dbuser = "bfuser";
+$dbpassw = '';
+$webhost = '10.20.0.43';
+$weburl = 'http://' . $webhost ;
+?>
+```
+
+## Test the setup
+
+At this point, you are finally ready to test the entire setup. If this works, the next step will be to populate it with a few users.
+
+There are two ways to test that everything works, on the command-line
+and in a web-browser. On the command-line, we would use something like
+curl or wget to see if we get a HTML output which makes sense. 
 
 ```
-cp config.php /var/www/html/
+curl http://floating-ip
 ```
+
+The information to look for, is this part:
+```
+<table>
+<tr><td>Users: </td><td>0</td></tr>
+<tr><td>Posts: </td><td>0</td></tr>
+<tr><td>Comments: </td><td>0</td></tr>
+</table>
+```
+If you can see the zeroes, it means we have a connection to the
+database and the site is working as intended.
+
+
+Likewise, in a web-browser you should se a relatively bare but
+functioning website. Again, the number og users, posts and comments
+should be zero.
 
 
