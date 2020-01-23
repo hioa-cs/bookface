@@ -146,6 +146,7 @@ In this sections, we'll set up a webserver, which will hold the actual PHP code.
 On the webserver host, install apache2 and the neccesary dependancies:
 
 ```
+apt-get update
 apt-get install apache2 libapache2-mod-php php-pgsql
 ```
 
