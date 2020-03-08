@@ -2,7 +2,7 @@
 <HEAD>
     <LINK href="stylesheet.css" rel="stylesheet" type="text/css">
   </HEAD>
-     <!-- bookface version 9 -->
+     <!-- bookface version 10 -->
 <?php
 $starttime = time();
 $use_file_store_for_images = 0;
@@ -12,7 +12,7 @@ echo "<td class=header ><td class=header>";
 echo "<h1 class=header><a class=title href='/index.php'>bookface</a></h1>";
 echo "</tr></table>\n";
 
-if(isset($_GET['use_file_store_for_images'])){
+if(isset($_GET['use_file_store_for_images']) or (isset($use_local_images) and $use_local_images)){
     $use_file_store_for_images = 1;
 }
 
@@ -47,6 +47,7 @@ try {
         echo "<! using memcache for randomized users !>\n";
         $random_user = $memcache->get("random_user_id");
         if ( $random_user < 1){
+	    echo "<! Cache miss. Going to the DB !>\n";
             $stmt = $dbh->query('select userID from users order by random() limit 1;');
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $random_user = $row['userid'];
@@ -68,6 +69,7 @@ try {
         $random_userid = $memcache->get("random_userid");
         $random_postid = $memcache->get("random_postid");
         if ( $random_userid < 1){
+	    echo "<! Cache miss. Going to the DB !>\n";
             $stmt = $dbh->query('select postid,userid from posts order by random() limit 1;');
       
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -94,7 +96,8 @@ try {
         $posts_count = $memcache->get("posts_count");
         $comments_count = $memcache->get("comments_count");
         echo "<! Using memcache to display counters !>\n";
-        if ( $user_count < 100 ){
+        if ( $user_count < 1 ){
+	    echo "<! Count too low or Cache miss. Going to the DB !>\n";
             $stmt = $dbh->query('select count(userID) from users;');
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $user_count = $row['count'];

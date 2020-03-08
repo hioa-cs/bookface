@@ -4,10 +4,11 @@ configs:
   bf_config:
     file: ./config.php
 
+  haproxy_config:
+    file: ./haproxy.cfg
+
 networks:
-  webnet:
-    external:
-      name: roach_cockroachdb
+  bf:
 
 services:
   web:
@@ -19,16 +20,26 @@ services:
     ports:
       - "80"
     networks:
-        - webnet
+        - bf
 
     environment:
       BF_MEMCACHE_SERVER: memcache
 
     deploy:
-      replicas: 1
+      replicas: 3
 
   memcache:
     image: memcached
 
     networks:
-      - webnet
+      - bf
+
+  db_balance:
+    image: haproxy
+
+    configs:
+      - source: haproxy_config
+        target: /usr/local/etc/haproxy/haproxy.cfg
+
+    networks:
+      - bf

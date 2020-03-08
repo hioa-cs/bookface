@@ -31,9 +31,6 @@ try {
     if( $picture_of_user == false){
 	$picture_of_user = "";
 	if( $use_file_store_for_images ){
-	    $sql = "select picture from users where userid = $user";
-	    $stmt = $dbh->query($sql);
-	    $row = $stmt->fetch(PDO::FETCH_ASSOC);
 	    $picture_of_user = file_get_contents("images/" . $row["picture"]);
 	} else {
 	    $sql = "select picture from users where userid = $user";
