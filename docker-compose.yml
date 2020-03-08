@@ -24,7 +24,12 @@ services:
 
     environment:
       BF_MEMCACHE_SERVER: memcache
-
+      BF_DB_HOST: db_balance
+      BF_DB_PORT: 26257
+      BF_DB_USER: bfuser
+      BF_DB_NAME: bf
+      BF_DB_FRONTPAGE_LIMIT: 500
+      
     deploy:
       replicas: 3
 
