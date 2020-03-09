@@ -9,6 +9,7 @@ configs:
 
 networks:
   bf:
+    attachable: true
 
 services:
   web:
@@ -18,7 +19,7 @@ services:
       - source: bf_config
         target: /var/www/html/config.php
     ports:
-      - "80"
+      - "80:80"
     networks:
         - bf
 
@@ -48,3 +49,6 @@ services:
 
     networks:
       - bf
+
+    ports:
+      - "1936:1936"
