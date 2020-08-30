@@ -74,7 +74,7 @@ This command will launch a docker instance which will start using the bookface p
 It may be wise to run the command in the foreground, meaning that bookface will only see activity while this instance is active. If you run it in the background, you may as well fill up your disk and experience added background activity on your system.
 
 ```
-docker run -ti -e INTERVAL=10 -e ENTRYPOINT=HOST_IP docker.cs.hioa.no/kyrrepublic/simplewebuser:latest
+docker run -ti -e INTERVAL=10 -e ENTRYPOINT=HOST_IP -e NOWAIT=True docker.cs.hioa.no/kyrrepublic/simplewebuser:latest
 ```
 While it is running, you can refresh your bookface page to see the activity. You can also monitor the CockroachDB dashboard to observe the database at work.
 
