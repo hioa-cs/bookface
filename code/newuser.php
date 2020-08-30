@@ -19,7 +19,7 @@ echo "Creating user: " . $username . "<br>";
 echo "image:" . $image . "<br>\n";
 include_once "config.php";
 
-if(isset($_GET['use_file_store_for_images'])){
+if(isset($use_local_images)){
     $use_file_store_for_images = 1;
 }
 
