@@ -39,7 +39,7 @@ try {
 			':username' => $username,
 			':image' => $imagestring,
 			]);
-    if($use_file_store_fore_images){
+    if($use_file_store_for_images){
 	file_put_contents("images/" . $imagestring, file_get_contents($image));	
     } else {	
 	$img = pg_escape_bytea(file_get_contents($image));
