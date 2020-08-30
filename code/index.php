@@ -2,7 +2,7 @@
 <HEAD>
     <LINK href="stylesheet.css" rel="stylesheet" type="text/css">
   </HEAD>
-     <!-- bookface version 10 -->
+     <!-- bookface version 13 -->
 <?php
 $starttime = time();
 $use_file_store_for_images = 0;
