@@ -4,7 +4,7 @@ This example provides a simple way to set up bookface on Docker with one databas
 
 ## Preparations
 
-1. Make sure you have Docker installed on your host. This example assumes Docker on Linux.
+1. Make sure you have Docker installed on your host. This example assumes Docker on Linux. If you want to run the example on Windows with Docker and WSL, make sure you enable the use of volumes for the directory you are in.
 2. Note down the IP address of the local host you are using. We'll call it "HOST_IP" here. 
 3. If you run this on a virtual machine inside a cloud and use a "Floating IP" to access your system, then also note down that IP. We'll call it "FLOATING_IP" in this example. 
 4. Make sure port 80 and port 9080 are accessible in the security groups or firewall.
