@@ -162,7 +162,7 @@ Make sure you have git installed. This can be done with `apt-get install git`, b
 
 The code is downloaded from a git repository like this:
 ```
-git clone  https://git.cs.hioa.no/kyrre.begnum/bookface.git
+git clone  https://git.cs.oslomet.no/kyrre.begnum/bookface.git
 cd bookface
 ```
 
