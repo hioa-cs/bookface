@@ -35,9 +35,9 @@ URL below needs to be changed as well.
 
 
 ```
-wget https://binaries.cockroachdb.com/cockroach-v19.2.2.linux-amd64.tgz
-tar xzf cockroach-v19.2.2.linux-amd64.tgz
-cp cockroach-v19.2.2.linux-amd64/cockroach /usr/local/bin
+wget https://binaries.cockroachdb.com/cockroach-v20.2.4.linux-amd64.tgz
+tar xzf cockroach-v20.2.4.linux-amd64.tgz
+cp cockroach-v20.2.4.linux-amd64/cockroach /usr/local/bin
 ```
 The three above commands download the latest release as a compressed
 archive. The tar command will extract the archive and finally we copy
@@ -67,9 +67,9 @@ mkdir /bfdata
 
 Next, let's start the database:
 ```
-cockroach start --insecure --store=/bfdata --listen-addr=0.0.0.0:26257 --http-addr=0.0.0.0:8080 --background
+cockroach start --insecure --store=/bfdata --listen-addr=0.0.0.0:26257 --http-addr=0.0.0.0:8080 --background --join=localhost:26257
 ```
-You can see, that the `/bfdata` folder is present, which is good. In
+You can see that the `/bfdata` folder is present, which is good. In
 addition, you see that we specify to addresses that the database will
 listen to. The first one is `0.0.0.0:26257` and means that port 26257
  will be available on all network interfaces and that is the port
@@ -80,6 +80,11 @@ There are some warnings which are displayd, but that is fine for us
 right now. Please remember, that this tutorial assumes that you are in a safe lab
 environment. We are obviously taking security-shortcuts here in order to get to
 the core of the learning experience. 
+
+The next step is to initialize the database:
+```
+cockroach init --insecure --host=localhost:26257
+```
 
 Once this command has finished, we should be able to see wether the
 database is actually running in the background or not. Here are to
