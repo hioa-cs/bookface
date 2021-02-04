@@ -227,3 +227,29 @@ should be zero.
 
 If you got to this point, then you are done with your basic setup and
 are ready for accepting users!
+
+# How to remove users without images
+
+There are several reasons why some unlucky users don't get any images.
+Instead of deleting the entire database it may be better to simply
+remove the particular users in question. However, this also means
+removing there comments as well as their posts and the comments
+on their posts from other users.
+
+First, go to your database and start the console:
+```
+cockroach sql --insecure --host=localhost:26257
+```
+
+Inside the console run each of these commands (each of these is a
+single long line):
+
+```
+delete from comments where exists (select postid from posts where postid = comments.postid and exists ( select * from users where posts.userid = users.userid and not exists ( select * from pictures where pictureid = users.picture)));
+
+delete from comments where exists ( select * from users where comments.userid = users.userid and not exists ( select * from pictures where pictureid = users.picture));
+
+delete from posts where exists ( select * from users where posts.userid = users.userid and not exists ( select * from pictures where pictureid = users.picture));
+
+delete from users where not exists ( select * from pictures where pictureid = users.picture);
+```
