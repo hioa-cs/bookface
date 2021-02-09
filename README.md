@@ -245,6 +245,8 @@ Inside the console run each of these commands (each of these is a
 single long line):
 
 ```
+use bf;
+
 delete from comments where exists (select postid from posts where postid = comments.postid and exists ( select * from users where posts.userid = users.userid and not exists ( select * from pictures where pictureid = users.picture)));
 
 delete from comments where exists ( select * from users where comments.userid = users.userid and not exists ( select * from pictures where pictureid = users.picture));
