@@ -2,11 +2,16 @@
 <HEAD>
     <LINK href="stylesheet.css" rel="stylesheet" type="text/css">
   </HEAD>
-     <!-- bookface version 14 -->
+     <!-- bookface version 15 -->
 <?php
 $starttime = time();
 $use_file_store_for_images = 0;
+#$frontpage_cutoff_days = "";
+
+$characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
 include_once "config.php";
+
 echo "\n<table class=headertable>\n<tr>";
 echo "<td class=header ><td class=header>";
 echo "<h1 class=header><a class=title href='/index.php'>bookface</a></h1>";
@@ -16,10 +21,94 @@ if(isset($_GET['use_file_store_for_images']) or (isset($use_local_images) and $u
     $use_file_store_for_images = 1;
 }
 
+if ( isset($use_activity_cutoff_days) and $use_activity_cutoff_days > 1 ){
+    echo "<! cutoff days is enabled " . $use_activity_cutoff_days . "!>\n";
+    $frontpage_cutoff_days = $use_activity_cutoff_days;
+}
 
 if ( isset($replica_dbhost) ){
     $dbhost = $replica_dbhost;
 }
+
+function get_random_user($dbh){
+
+    global $frontpage_cutoff_days;
+    echo "<! Trying cutoff-based random search " . $frontpage_cutoff_days . " !>\n";    	
+    if ( isset($frontpage_cutoff_days) and $frontpage_cutoff_days > 1 ){
+	#	  $start_interval = rand(0,$frontpage_cutoff_days);
+
+	$start_interval = date("Y-m-d", strtotime("-" . $frontpage_cutoff_days . " days"));
+	$end_interval = date("Y-m-d", strtotime("-" . ($frontpage_cutoff_days + $frontpage_cutoff_days) . " days"));
+	echo "<! cutoff start date: " . $start_interval . " and end date: " . $end_interval ." !>\n";
+	$sql = "select userid from users where ( lastPostDate >= '" . $end_interval . "' and lastPostDate <= '" . $start_interval . "' ) order by random() limit 1;";
+	$stmt = $dbh->query($sql);
+	$row = $stmt->fetch(PDO::FETCH_ASSOC);
+	$random_user = $row['userid'];
+	if ( $random_user > 1 ){
+	    return $random_user;
+	}
+    } 
+    echo "<! Trying fast random search !>\n";    
+    $character = $characters[rand(0, strlen($characters))];
+    $random_user = "";
+    
+    $stmt = $dbh->query('select userID from users where ( name like \''. $character .'%\') order by random() limit 1;');
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $random_user = $row['userid'];
+	
+    if ( $random_user < 1 ){
+	echo "<! Fast random search did not work, using slower function !>\n";
+	$stmt = $dbh->query('select userID from users order by random() limit 1;');
+	$row = $stmt->fetch(PDO::FETCH_ASSOC);
+	$random_user = $row['userid'];
+    } else {
+	    echo "<! Fast random search worked !>\n";
+    }
+    
+    return $random_user;
+    
+}
+
+function get_random_poster($dbh){
+    
+    global $frontpage_cutoff_days;
+    echo "<! Trying cutoff-based random post search " . $frontpage_cutoff_days . " !>\n";    	
+    if ( isset($frontpage_cutoff_days) and $frontpage_cutoff_days > 1 ){
+	#	  $start_interval = rand(0,$frontpage_cutoff_days);
+
+	$start_interval = date("Y-m-d", strtotime("-" . $frontpage_cutoff_days . " days"));
+	$end_interval = date("Y-m-d", strtotime("-" . ($frontpage_cutoff_days + $frontpage_cutoff_days) . " days"));
+	echo "<! cutoff start date: " . $start_interval . " and end date: " . $end_interval ." !>\n";
+	$sql = "select postid,userid from posts where ( PostDate >= '" . $end_interval . "' and PostDate <= '" . $start_interval . "' ) order by random() limit 1;";
+	$stmt = $dbh->query($sql);
+	$row = $stmt->fetch(PDO::FETCH_ASSOC);
+	$random_user = $row['userid'];
+	if ( $random_user > 1 ){
+	    return $row;
+	}
+    } 
+
+    echo "<! Trying fast random poster search !>\n";
+    $character = $characters[rand(0, strlen($characters))];
+    $row = "";
+    
+    $stmt = $dbh->query('select postid,userid from posts where ( text like \''. $character . '%\') order by random() limit 1;');
+      
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $random_user = $row['userid'];
+    if ( $random_user < 1 ){
+	echo "<! Fast random search did not work, using slower function !>\n";
+	$stmt = $dbh->query('select postid,userid from posts order by random() limit 1;');
+	$row = $stmt->fetch(PDO::FETCH_ASSOC);
+    } else {
+	    echo "<! Fast random search worked !>\n";
+    }
+    
+    return $row;
+    
+}
+
+
 try {
     if ( isset($dbpassw) ){
 	    $dbh = new PDO('pgsql:host=' . $dbhost . ";port=" . $dbport . ";dbname=" . $db . ';sslmode=disable',$dbuser, $dbpassw, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => true,));
@@ -47,20 +136,16 @@ try {
         echo "<! using memcache for randomized users !>\n";
         $random_user = $memcache->get("random_user_id");
         if ( $random_user < 1){
-	    echo "<! Cache miss. Going to the DB !>\n";
-            $stmt = $dbh->query('select userID from users order by random() limit 1;');
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $random_user = $row['userid'];
+	    
+	    $random_user = get_random_user($dbh);
+	    
             $memcache->set("random_user_id", $random_user,0,30); 
         }
         echo "<! Random poster: " . $random_user . " !>\n";
 
         
     } else {
-
-        $stmt = $dbh->query('select userID from users order by random() limit 1;');
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        echo "<! Random poster: " . $row['userid'] . " !>\n";
+        echo "<! Random poster: " . get_random_user($dbh) . " !>\n";
     }
 
     ### POST and USER
@@ -70,10 +155,7 @@ try {
         $random_postid = $memcache->get("random_postid");
         if ( $random_userid < 1){
 	    echo "<! Cache miss. Going to the DB !>\n";
-            $stmt = $dbh->query('select postid,userid from posts order by random() limit 1;');
-      
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
+	    $row = get_random_poster($dbh);
             
             $random_userid = $row['userid'];
             $random_postid = $row['postid'];
@@ -84,8 +166,7 @@ try {
         echo "<! Random post: " . $random_postid . " !>\n";
         echo "<! Random user: " . $random_userid . " !>\n";
     } else {
-        $stmt = $dbh->query('select postid,userid from posts order by random() limit 1;');
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+	$row = get_random_poster($dbh);
         echo "<! Random post: " . $row['postid'] . " !>\n";
         echo "<! Random user: " . $row['userid'] . " !>\n";
     }
@@ -110,9 +191,9 @@ try {
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $comments_count = $row['count'];
 
-            $user_count = $memcache->set("user_count",$user_count,0,180);
-            $posts_count = $memcache->set("posts_count",$posts_count,0,180);
-            $comments_count = $memcache->set("comments_count",$comments_count,0,180);
+            $user_count = $memcache->set("user_count",$user_count,0,300);
+            $posts_count = $memcache->set("posts_count",$posts_count,0,300);
+            $comments_count = $memcache->set("comments_count",$comments_count,0,300);
         }
 
         echo "<table>\n";    
@@ -150,8 +231,16 @@ try {
     }
     
     if ( empty($user_list_for_front_page) ) {
-
-	$sql = "select userID,name,status,posts,comments,lastPostDate,picture from users order by lastPostDate desc";
+ 	$sql = "";
+        if ( $frontpage_cutoff_days ){
+            # get date for X days since cutoff
+#            $cutoff = date('Y-m-d', strtotime('-' . $frontpage_cutoff_days .' days', strtotime(date())));
+            $cutoff = date("Y-m-d", strtotime("-" . $frontpage_cutoff_days . " days"));
+            echo "<! cutoff date: " . $cutoff . "!>\n";
+            $sql = "select userID,name,status,posts,comments,lastPostDate,picture from users where ( lastPostDate >= '" . $cutoff . "' ) order by lastPostDate desc";
+        } else {
+	    $sql = "select userID,name,status,posts,comments,lastPostDate,picture from users order by lastPostDate desc";
+	}
 	if ( isset($frontpage_limit) ){
 	    $sql = $sql . " limit $frontpage_limit";
 	}
