@@ -2,6 +2,7 @@
 $user = $_GET['user'];
 include_once "config.php";
 $use_file_store_for_images = 0;
+$memcache_picture_duration = 600;
 if(isset($_GET['use_file_store_for_images'])){
     $use_file_store_for_images = 1;
 }
@@ -17,9 +18,12 @@ try {
 	$memcache_override = $_GET['nomemcache'];
     }
 
-    if ( $memcache_enabled == 1 and ! $memcache_override ){
+    if ( isset($memcache_enabled) and $memcache_enabled == 1 and ! $memcache_override ){
 	$memcache = new Memcache();
     	$memcache->addServer ( $memcache_server,"11211" );
+	if ( isset($memcache_picture_keep_minutes) and $memcache_picture_keep_minutes > 0 ){
+	    $memcache_picture_duration = $memcache_picture_keep_minutes * 60;
+	}
     }
 
 			
@@ -54,7 +58,7 @@ try {
     }
         // cache for 10 minutes
     if ( $memcache ){
-        $memcache->set($key, $picture_of_user,0,6000);
+        $memcache->set($key, $picture_of_user,0,$memcache_picture_duration);
     }
     header("Content-type: image/jpg");
     echo $picture_of_user;				
