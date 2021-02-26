@@ -22,6 +22,7 @@ services:
       - "80:80"
     networks:
         - bf
+    volumes:
         - type: bind
           source: /bf_images
           target: /var/www/html/images
