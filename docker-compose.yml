@@ -22,6 +22,9 @@ services:
       - "80:80"
     networks:
         - bf
+        - type: bind
+          source: /bf_images
+          target: /var/www/html/images
 
     environment:
       BF_MEMCACHE_SERVER: memcache

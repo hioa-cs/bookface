@@ -1,43 +1,63 @@
 version: '3.4'
 
-configs:
-  bf_config:
-    file: ./config.php
-
-networks:
-  webnet:
-    external:
-      name: roach_cockroachdb
-
 volumes:
   bf_images:
     driver: gluster
     name: "images"
-    
+
+configs:
+  bf_config:
+    file: ./config.php
+
+  haproxy_config:
+    file: ./haproxy.cfg
+
+networks:
+  bf:
+    attachable: true
 
 services:
   web:
-    image: dock01:5000/bf:v4
+    image: docker.cs.hioa.no/kyrrepublic/bf:latest
 
     configs:
       - source: bf_config
         target: /var/www/html/config.php
     ports:
-      - "80"
+      - "80:80"
     networks:
-        - webnet
+        - bf
+    volumes:
+      - bf_images:/var/www/html/images
 
     environment:
       BF_MEMCACHE_SERVER: memcache
-      BF_FRONTPAGE_LIMIT: 10
-    volumes:
-      - bf_images:/var/www/html/images
-    
+      BF_DB_HOST: db_balance
+      BF_DB_PORT: 26257
+      BF_DB_USER: bfuser
+      BF_DB_NAME: bf
+      BF_FRONTPAGE_LIMIT: 500
+      
     deploy:
-      replicas: 1
+      replicas: 3
 
   memcache:
     image: memcached
 
     networks:
-      - webnet
+      - bf
+
+  db_balance:
+    image: haproxy
+
+    configs:
+      - source: haproxy_config
+        target: /usr/local/etc/haproxy/haproxy.cfg
+
+    networks:
+      - bf
+
+    ports:
+      - "1936:1936"
+
+
