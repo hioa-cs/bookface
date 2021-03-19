@@ -14,6 +14,8 @@ networks:
 services:
   web:
     image: docker.cs.hioa.no/kyrrepublic/bf:latest
+    
+    restart: always
 
     configs:
       - source: bf_config
@@ -40,12 +42,15 @@ services:
 
   memcache:
     image: memcached
-
+    restart: always
+    
     networks:
       - bf
 
   db_balance:
     image: haproxy
+    
+    restart: always
 
     configs:
       - source: haproxy_config
