@@ -15,6 +15,8 @@ error_reporting(E_ALL);
 $oldip = $_GET['entrypoint'];
 $migration_key = $_GET['key'];
 
+$SQL_CODE_FILE = "/tmp/sql_bookface_insert.sql";
+
 include_once "config.php";
 
 // $link = mysqli_connect("$olddb:$oldport", $olduser,$oldpassword );
@@ -63,20 +65,31 @@ try {
 	    
 	    echo "found user: " . $result[2] . " <br>\n";
 	    echo "User ID: " . $result[1] . " <br>\n";
+	    
+	    $userid = $result[1];
+	    $username = $result[2];
+	    
 		if ( $result[1] <= $max ) {
 			continue;
 		}
-	    
+	    # We need to determine if the source stores images in the database or not
 	    $imageurl = "http://" . $oldip . "/showimage.php?user=" . $result[1];
+	    
+	    if ( preg_match("/images\/(.+\.jpg)/",$line,$iresult )){
+		# this site stores images in files, we need to change the URL
+		$imageurl = "http://" . $oldip . "/images/" . $iresult[1];
+	    }
+	    
+	    
 	    echo "Image: " . $imageurl . "<br>\n";
 
 		# attemp to insert user
 	    $imagestring = generateRandomString() . ".jpg";
 #    imagejpeg($img, "images/file.jpg");
 #    $img = file_get_contents($image);
-   	   file_put_contents("images/" . $imagestring, file_get_contents($imageurl));
+	    file_put_contents("images/" . $imagestring, file_get_contents($imageurl));
 
-	    $showuser = file("http://" . $oldip . "/showuser.php?user=" . $result[1]);
+	    $showuser = file("http://" . $oldip . "/showuser.php?user=" . $userid);
 	    $startdate = "";
 	    $posts = "";
 	    $lastpost = null;
@@ -113,9 +126,9 @@ try {
 	    }
 	    $query =  "insert into users (userid,name,picture,status,posts,comments,createdate,lastpostdate) values(:userid,:username,:image,'',:posts,0,:createdate,:lastpostdate );";
 	    $stmt = $dbh->prepare($query);
-	    $username = substr($result[2],0,49);
+	    $username = substr($username,0,49);
 	    $stmt->execute([
-			    ':userid' => $result[1],
+			    ':userid' => $userid,
        	    ':posts' => $posts,
 			    ':createdate' => $startdate,
 			    ':username' => $username,

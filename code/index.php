@@ -2,7 +2,7 @@
 <HEAD>
     <LINK href="stylesheet.css" rel="stylesheet" type="text/css">
   </HEAD>
-     <!-- bookface version 15 -->
+     <!-- bookface version 16 -->
 <?php
 $starttime = time();
 $use_file_store_for_images = 0;
@@ -208,9 +208,9 @@ try {
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $comments_count = $row['count'];
 
-            $user_count = $memcache->set("user_count",$user_count,0,300);
-            $posts_count = $memcache->set("posts_count",$posts_count,0,300);
-            $comments_count = $memcache->set("comments_count",$comments_count,0,300);
+            $user_count = $memcache->set("user_count",$user_count,0,60);
+            $posts_count = $memcache->set("posts_count",$posts_count,0,60);
+            $comments_count = $memcache->set("comments_count",$comments_count,0,60);
         }
 
         echo "<table>\n";    
@@ -267,7 +267,7 @@ try {
     }
     // cache for 10 minutes
     if ( isset($memcache) and $memcache ){
-	$memcache->set("user_list_for_front_page", $user_list_for_front_page,0,600);
+	$memcache->set("user_list_for_front_page", $user_list_for_front_page,0,60);
     }	
 
     echo "<table class=row >\n";
