@@ -35,9 +35,9 @@ URL below needs to be changed as well.
 
 
 ```
-wget https://binaries.cockroachdb.com/cockroach-v20.2.4.linux-amd64.tgz
-tar xzf cockroach-v20.2.4.linux-amd64.tgz
-cp cockroach-v20.2.4.linux-amd64/cockroach /usr/local/bin
+wget https://binaries.cockroachdb.com/cockroach-v21.2.4.linux-amd64.tgz
+tar xzf cockroach-v21.2.4.linux-amd64.tgz
+cp cockroach-v21.2.4.linux-amd64/cockroach /usr/local/bin
 ```
 The three above commands download the latest release as a compressed
 archive. The tar command will extract the archive and finally we copy
