@@ -10,7 +10,7 @@ for the webserver can be repeated on multiple webservers who are
 behind a load-balancer, but we do not cover the steps of setting up
 the load-balancer itself here.
 
-**We assume that Ubuntu 18.04 is used as a base system.**
+**We assume that Ubuntu 20.04 is used as a base system.**
 
 # Setting up the database (CockroachDB)
 
