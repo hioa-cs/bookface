@@ -10,7 +10,7 @@ for the webserver can be repeated on multiple webservers who are
 behind a load-balancer, but we do not cover the steps of setting up
 the load-balancer itself here.
 
-**We assume that Ubuntu 20.04 is used as a base system.**
+**We assume that Ubuntu 22.04 is used as a base system.**
 
 # Setting up the database (CockroachDB)
 
@@ -35,9 +35,9 @@ URL below needs to be changed as well.
 
 
 ```
-wget https://binaries.cockroachdb.com/cockroach-v21.2.4.linux-amd64.tgz
-tar xzf cockroach-v21.2.4.linux-amd64.tgz
-cp cockroach-v21.2.4.linux-amd64/cockroach /usr/local/bin
+wget https://binaries.cockroachdb.com/cockroach-v22.2.2.linux-amd64.tgz
+tar xzf cockroach-v22.2.2.linux-amd64.tgz
+cp cockroach-v22.2.2.linux-amd64/cockroach /usr/local/bin
 ```
 The three above commands download the latest release as a compressed
 archive. The tar command will extract the archive and finally we copy
@@ -87,16 +87,17 @@ cockroach init --insecure --host=localhost:26257
 ```
 
 Once this command has finished, we should be able to see wether the
-database is actually running in the background or not. Here are to
-trusty companions we can use:
+database is actually running in the background or not. The ps command
+with list all running processes. Let's run it and filter the output to
+only show lines that contain the text "cockroach":
 
 ```
 ps aux | grep cockroach
-netstat -anltp | grep cockroach
 ```
 
-You should be able to see both the running process and that the ports
-are actually opened and being listened on.
+You should be able to see a line corresponding to the running
+database. This command can be used later as well, if you want to check
+if the database is still running.
 
 
 ## Initializing the database
@@ -120,13 +121,15 @@ CREATE DATABASE bf;
 CREATE USER bfuser;
 GRANT ALL ON DATABASE bf TO bfuser;
 ```
-These commands will set up the tables:
+These commands will set up the tables (make sure you remember to
+change the name of bfuser if you did so above):
 ```
 USE bf;
 CREATE table users ( userID INT PRIMARY KEY DEFAULT unique_rowid(), name STRING(50), picture STRING(300), status STRING(10), posts INT, comments INT, lastPostDate TIMESTAMP DEFAULT NOW(), createDate TIMESTAMP DEFAULT NOW());
 CREATE table posts ( postID INT PRIMARY KEY DEFAULT unique_rowid(), userID INT, text STRING(300), name STRING(150), image STRING(32), postDate TIMESTAMP DEFAULT NOW());
 CREATE table comments ( commentID INT PRIMARY KEY DEFAULT unique_rowid(), postID INT, userID INT, text STRING(300),  postDate TIMESTAMP DEFAULT NOW());
 CREATE table pictures ( pictureID STRING(300), picture BYTES );
+GRANT SELECT,UPDATE,INSERT to bfuser on TABLE bf.*;
 ```
 
 You can end the session by typing `exit` and hitting enter.
@@ -152,15 +155,35 @@ On the webserver host, install apache2 and the neccesary dependancies:
 
 ```
 apt-get update
-apt-get install apache2 libapache2-mod-php php-pgsql
+apt-get install apache2 libapache2-mod-php php-pgsql net-tools
 ```
 
-You should be able to see that the apache2 webserver is running using our two trusty commands `ps` and `netstat`. Apache listens on port 80. You can also browse the IP address of the webserver in order to verify that you can see a standard apache welcome page.
+You should be able to see that the apache2 webserver is running using
+our trusty command `ps`. For example: 
+
+```
+ps aux | grep apache
+```
+
+Compared to cockroachdb, you will see more than one line. This is
+because Apache forks itself into several threads in order to be able
+to handle several web-connections at the same time. If this was a busy
+webserver, you might get even more lines.
+
+Apache listens on port 80. We installed the package "net-tools" which
+gives us a handy way to check who is listening on what port. Try the
+following: 
+
+```
+netstat -anltp
+```
+
+There should be one line here, where we listen on port 80, owned by
+the process apache2. 
 
 
-Make sure you have git installed. This can be done with `apt-get install git`, but it is normally present.
+The next step is to download the bookface code from the git repository.
 
-The code is downloaded from a git repository like this:
 ```
 git clone  https://git.cs.oslomet.no/kyrre.begnum/bookface.git
 cd bookface
@@ -178,10 +201,15 @@ One important part of how bookface works, is it's configuration file. This is wh
 Next, make a copy of the example configuration file. You may want to keep this file sepparate from the git repository, since it can work with several versions of the code.
 
 ```
-cp config_example.php /var/www/html/config.php
+cp config.php /var/www/html/config.php
 ```
 
-Now, you can edit the config.php file and fill out the variables. 
+Now, you can edit the config.php file and fill out the variables.
+
+```
+nano /var/www/html/config.php
+```
+
 Let's assume that the IP address of the database is 192.168.131.23 and we chose bfuser as a username. 
 Let's also assume that the floating/public IP address (assuming you are in a cloud environment) is 10.20.0.43. 
 Let's also assume that the port number of the database is 26257. The config.php file would then look like this: 
@@ -194,6 +222,7 @@ $dbuser = "bfuser";
 $dbpassw = '';
 $webhost = '10.20.0.43';
 $weburl = 'http://' . $webhost ;
+$frontpage_limit = 1000;
 ?>
 ```
 

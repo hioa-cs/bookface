@@ -1,6 +1,6 @@
 <?php
 $dbhost = "";
-$dbport = "3306";
+$dbport = "";
 $db = "";
 $dbuser = "";
 $dbpassw = '';
