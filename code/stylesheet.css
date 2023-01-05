@@ -10,6 +10,7 @@ body    {
         }
 
 img	{
+        background-color: white;
 	border: 0;
 	}
 
@@ -22,8 +23,8 @@ td      {
 td.post      {
         background-color: lightblue;
         font-family: Verdana, Arial, Helvetica, sans-serif;
-        font-size: 10pt;
-		width: 150px;
+        font-size: 9pt;
+		width: 170px;
         }
 
 td.commentpost      {
@@ -80,14 +81,19 @@ td.header      {
         }
 
 table.row {
-	    background-color: grey;
-		border-collapse: collapse; 
-		width: 50%;
+	    background-color: white;
+	    border-collapse: collapse; 
+	    width: 50%;
 	
 }
 
 td.row {
 	    background-color: #666699;
+	
+}
+
+td.lightrow {
+	    background-color: #d2d2e7;
 	
 }
 

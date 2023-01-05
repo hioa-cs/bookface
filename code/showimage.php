@@ -1,6 +1,9 @@
 <?php
 $user = $_GET['user'];
 include_once "config.php";
+if (isset($_GET['image'])){
+ $user = $_GET['image'];   
+}
 $use_file_store_for_images = 0;
 $memcache_picture_duration = 600;
 if(isset($_GET['use_file_store_for_images'])){

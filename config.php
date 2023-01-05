@@ -1,5 +1,5 @@
 <?php
-$use_local_images = 1;
+$use_local_images = 0;
 $dbhost = getenv("BF_DB_HOST");
 $dbport =  getenv("BF_DB_PORT");
 $db = getenv("BF_DB_NAME");

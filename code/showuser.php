@@ -57,7 +57,7 @@ try {
     if (empty($posts_by_user)){
 	echo "<! No memcache object found: posts_by_$user !>\n";
 	$posts_by_user = array();
-	$sql = "select postid,text,postdate from posts where userid = $user order by postdate desc;";
+	$sql = "select postid,text,postdate,image from posts where userid = $user order by postdate desc;";
 	foreach ($dbh->query($sql) as $rec)
 	  $posts_by_user[] = $rec;
 	
@@ -72,7 +72,19 @@ try {
     $table = "<table>\n";
     if ( isset($posts_by_user) ){
 	foreach ( $posts_by_user as $res ){
-	    $table .= "<! postID:". $res['postid'] . " !><tr><td class=post>" . $res['postdate'] . "</td><td class=postcontent>" . $res['text'] . "</td><tr>\n";
+	    $table .= "<! postID:". $res['postid'] . " !><tr><td class=post>" . $res['postdate'] . "</td><td class=postcontent>" . $res['text'] . "</td></tr>\n";
+	    
+	    
+	    if( $res['image'] ){
+		echo "\t\t<! image for post: " . $res['image'] . ">\n";
+		if ( $use_file_store_for_images ){
+		    $table .= "\t\t<tr><td colspan=3 ><img src='/images/" . trim($res['image']) . "'></td></tr>\n";
+		} else {
+		    $table .= "\t\t<tr><td colspan=3 ><img src='/postimage.php?image=" . trim($res['image']) . "'></td></tr>\n";
+		}		
+	    }
+
+	    
 	    $postcount++;
 	    
 	    $key = "comments_on_" . $res['postid'];

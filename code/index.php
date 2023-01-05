@@ -249,7 +249,7 @@ try {
     
     if ( empty($user_list_for_front_page) ) {
  	$sql = "";
-        if ( $frontpage_cutoff_days ){
+        if ( isset($frontpage_cutoff_days) and $frontpage_cutoff_days ){
             # get date for X days since cutoff
 #            $cutoff = date('Y-m-d', strtotime('-' . $frontpage_cutoff_days .' days', strtotime(date())));
             $cutoff = date("Y-m-d", strtotime("-" . $frontpage_cutoff_days . " days"));
@@ -276,19 +276,65 @@ try {
     foreach ( $user_list_for_front_page as $res ){
 	$style = "class=row";
 	if ( $alternator % 2 ){
-	    $style = "";					
+	    $style = "class=lightrow";					
 	}
 	$alternator++;
-	echo "<tr >\n";
-	if ( $use_file_store_for_images ){
-	    echo "<td $style ><a href='/showuser.php?user=" . $res['userid']. "'><img src='/images/" . trim($res['picture']) . "'></a></td>";
-	} else {
-	    echo "<td $style ><a href='/showuser.php?user=" . $res['userid']. "'><img src='/showimage.php?user=" . trim($res['userid']) . "'></a></td>";
-	}
-	echo "<td $style ><a href='/showuser.php?user=" . $res['userid']. "'>" . trim($res['name']) . "</a></td>";
-	echo "<td $style >" . $res['posts'] . "</td>";
 	
-	echo "</tr></a>\n";
+	echo "<tr>\n";
+	echo "\t<! userline: " . $res['userid'] . ">\n";
+	
+	if ( $use_file_store_for_images ){
+	    echo "\t<td $style ><a href='/showuser.php?user=" . $res['userid']. "'><img src='/images/" . trim($res['picture']) . "'></a></td>\n";
+	} else {
+	    echo "\t<td $style ><a href='/showuser.php?user=" . $res['userid']. "'><img src='/showimage.php?user=" . trim($res['userid']) . "'></a></td>\n";
+	}
+
+	echo "\t<td $style ><a href='/showuser.php?user=" . $res['userid']. "'>" . trim($res['name']) . "</a></td>\n";	
+	echo "\t<td $style >" . $res['posts'] . "</td>\n";
+	echo "</tr>\n";
+	
+	if ( $res['posts'] > 0 ){
+	    # show latest post
+
+	    echo "<tr>\n";
+	    $latest_post_by_user = array();
+	    if ( isset($memcache) and $memcache ){
+		$latest_post_by_user = $memcache->get("latest_post_by_" . $res['userid']);
+	    }
+    
+	    if (empty($latest_post_by_user)){
+		echo "\t<! No memcache object found: posts_by_" . $res['userid'] . " !>\n";
+		$latest_post_by_user = array();
+		$sql = "select postid,text,postdate,image from posts where userid = '" . $res['userid'] . "' order by postdate desc LIMIT 1;";
+		$latest_post_query = $dbh->query($sql);		  
+		$latest_post_by_user = $latest_post_query->fetch(PDO::FETCH_ASSOC);
+		// cache for 10 minutes
+		if ( isset($memcache) and $memcache ){
+		    $memcache->set("latest_post_by_" . $res['userid'], $latest_post_by_user,0,600);
+		}	
+	    }
+	    echo "\t<td>\n";
+	    echo "\t<table>\n";
+	    echo "\t\t<! postID:". $latest_post_by_user['postid'] . " !>\n";
+            echo "\t\t<tr><td>" . $latest_post_by_user['postdate'] . "</td><td>" . $latest_post_by_user['text'] . "</td></tr>\n";
+	    
+
+
+	    if( $latest_post_by_user['image'] ){
+		echo "\t\t<! image for post: " . $latest_post_by_user['image'] . ">\n";
+		if ( $use_file_store_for_images ){
+		    echo "\t\t<tr><td colspan=3 ><img src='/images/" . trim($latest_post_by_user['image']) . "'></td></tr>\n";
+		} else {
+		    echo "\t\t<tr><td colspan=3 ><img src='/postimage.php?image=" . trim($latest_post_by_user['image']) . "'></td></tr>\n";
+		}		
+	    }
+	    echo "\t</table>\n";
+	    echo "\t</td>\n";
+	    echo "</tr>\n";
+
+	}
+	
+
     }
     echo "</table>\n";
     $totaltime = time() - $starttime;
