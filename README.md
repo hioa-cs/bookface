@@ -185,7 +185,7 @@ the process apache2.
 The next step is to download the bookface code from the git repository.
 
 ```
-git clone  https://git.cs.oslomet.no/kyrre.begnum/bookface.git
+git clone https://github.com/hioa-cs/bookface.git
 cd bookface
 ```
 
