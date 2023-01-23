@@ -1,14 +1,8 @@
 <?php
-$user = $_GET['user'];
+$image = $_GET['image'];
 include_once "config.php";
-if (isset($_GET['image'])){
- $user = $_GET['image'];   
-}
 $use_file_store_for_images = 0;
 $memcache_picture_duration = 600;
-$picture_of_user = false;
-$memcache = "";
-
 if(isset($_GET['use_file_store_for_images'])){
     $use_file_store_for_images = 1;
 }
@@ -16,7 +10,7 @@ if(isset($_GET['use_file_store_for_images'])){
 if ( isset($replica_dbhost) ){
      $dbhost = $replica_dbhost;
 }
-
+$memcache = "";
 try {
     $dbh = new PDO('pgsql:host=' . $dbhost . ";port=" . $dbport . ";dbname=" . $db . ';sslmode=disable',$dbuser, null, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => true,));
     $memcache_override = 0;
@@ -32,22 +26,18 @@ try {
 	}
     }
 
-			
-    $key = "picture_of_" . $user;
+    $picture = "";		
+    $key = "picture_" . $image;
     if ( $memcache ){
-	$picture_of_user = $memcache->get($key);
+	$picture = $memcache->get($key);
     }
 
-    if( $picture_of_user == false){
-	$picture_of_user = "";
+    if( $picture == false){
+	$picture = "";
 	if( $use_file_store_for_images ){
-	    $picture_of_user = file_get_contents("images/" . $row["picture"]);
+	    $picture = file_get_contents("images/" . $row["image"]);
 	} else {
-	    $sql = "select picture from users where userid = $user";
-	    $stmt = $dbh->query($sql);
-	    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-	    
-	    $image_query = "select picture from pictures where pictureid = '" . $row["picture"] . "'";
+	    $image_query = "select picture from pictures where pictureid = '" . $image . "'";
 	    # echo $image_query . "\n";
 	    $stmt = $dbh->query($image_query);
 	    $imagerow = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -57,17 +47,17 @@ try {
 	    fpassthru($imagerow["picture"]);
 	   
 	    
-	    $picture_of_user = ob_get_contents();
+	    $picture = ob_get_contents();
 	    ob_end_clean();
 	    #echo $picture_of_user;
 	}
     }
         // cache for 10 minutes
     if ( $memcache ){
-        $memcache->set($key, $picture_of_user,0,$memcache_picture_duration);
+        $memcache->set($key, $picture,0,$memcache_picture_duration);
     }
     header("Content-type: image/jpg");
-    echo $picture_of_user;				
+    echo $picture;				
 				
 }  catch (Exception $e) {
     echo $e->getMessage() . "\r\n";

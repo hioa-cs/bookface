@@ -24,7 +24,7 @@ if ( isset($replica_dbhost) ){
 try {
     $dbh = new PDO('pgsql:host=' . $dbhost . ";port=" . $dbport . ";dbname=" . $db . ';sslmode=disable',$dbuser, null, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => true,));
 
-    
+    $memcache = "";
     $memcache_override = 0;
     if ( isset($_GET['nomemcache'])){
 	$memcache_override = $_GET['nomemcache'];

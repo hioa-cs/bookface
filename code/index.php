@@ -6,7 +6,7 @@
 <?php
 $starttime = time();
 $use_file_store_for_images = 0;
-#$frontpage_cutoff_days = "";
+$frontpage_cutoff_days = "";
 $fast_random_search = 0;
 $fast_cutoff_search = 0;
 
@@ -18,6 +18,8 @@ echo "\n<table class=headertable>\n<tr>";
 echo "<td class=header ><td class=header>";
 echo "<h1 class=header><a class=title href='/index.php'>bookface</a></h1>";
 echo "</tr></table>\n";
+
+$memcache = "";
 
 if(isset($_GET['use_file_store_for_images']) or (isset($use_local_images) and $use_local_images)){
     $use_file_store_for_images = 1;
@@ -313,7 +315,7 @@ try {
 		    $memcache->set("latest_post_by_" . $res['userid'], $latest_post_by_user,0,600);
 		}	
 	    }
-	    echo "\t<td>\n";
+	    echo "\t<td colspan=3 >\n";
 	    echo "\t<table>\n";
 	    echo "\t\t<! postID:". $latest_post_by_user['postid'] . " !>\n";
             echo "\t\t<tr><td>" . $latest_post_by_user['postdate'] . "</td><td>" . $latest_post_by_user['text'] . "</td></tr>\n";
@@ -323,9 +325,9 @@ try {
 	    if( $latest_post_by_user['image'] ){
 		echo "\t\t<! image for post: " . $latest_post_by_user['image'] . ">\n";
 		if ( $use_file_store_for_images ){
-		    echo "\t\t<tr><td colspan=3 ><img src='/images/" . trim($latest_post_by_user['image']) . "'></td></tr>\n";
+		    echo "\t\t<tr><td colspan=2 ><img src='/images/" . trim($latest_post_by_user['image']) . "'></td></tr>\n";
 		} else {
-		    echo "\t\t<tr><td colspan=3 ><img src='/postimage.php?image=" . trim($latest_post_by_user['image']) . "'></td></tr>\n";
+		    echo "\t\t<tr><td colspan=2 ><img src='/postimage.php?image=" . trim($latest_post_by_user['image']) . "'></td></tr>\n";
 		}		
 	    }
 	    echo "\t</table>\n";
