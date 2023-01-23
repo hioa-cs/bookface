@@ -129,7 +129,7 @@ CREATE table users ( userID INT PRIMARY KEY DEFAULT unique_rowid(), name STRING(
 CREATE table posts ( postID INT PRIMARY KEY DEFAULT unique_rowid(), userID INT, text STRING(300), name STRING(150), image STRING(32), postDate TIMESTAMP DEFAULT NOW());
 CREATE table comments ( commentID INT PRIMARY KEY DEFAULT unique_rowid(), postID INT, userID INT, text STRING(300),  postDate TIMESTAMP DEFAULT NOW());
 CREATE table pictures ( pictureID STRING(300), picture BYTES );
-GRANT SELECT,UPDATE,INSERT to bfuser on TABLE bf.*;
+GRANT SELECT,UPDATE,INSERT on TABLE bf.* to bfuser;
 ```
 
 You can end the session by typing `exit` and hitting enter.
