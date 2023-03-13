@@ -2,7 +2,7 @@
 <HEAD>
     <LINK href="stylesheet.css" rel="stylesheet" type="text/css">
   </HEAD>
-     <!-- bookface version 16 -->
+     <!-- bookface version 17 -->
 <?php
 $starttime = time();
 $use_file_store_for_images = 0;
@@ -198,7 +198,8 @@ try {
         echo "<! Using memcache to display counters !>\n";
         if ( $user_count < 1 ){
 	    echo "<! Count too low or Cache miss. Going to the DB !>\n";
-            $stmt = $dbh->query('select count(userID) from users;');
+            
+	    $stmt = $dbh->query('select count(userID) from users;');
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $user_count = $row['count'];
         
@@ -210,9 +211,9 @@ try {
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $comments_count = $row['count'];
 
-            $user_count = $memcache->set("user_count",$user_count,0,60);
-            $posts_count = $memcache->set("posts_count",$posts_count,0,60);
-            $comments_count = $memcache->set("comments_count",$comments_count,0,60);
+            $memcache->set("user_count",$user_count,0,60);
+            $memcache->set("posts_count",$posts_count,0,60);
+            $memcache->set("comments_count",$comments_count,0,60);
         }
 
         echo "<table>\n";    
@@ -302,18 +303,23 @@ try {
 	    $latest_post_by_user = array();
 	    if ( isset($memcache) and $memcache ){
 		$latest_post_by_user = $memcache->get("latest_post_by_" . $res['userid']);
-	    }
-    
-	    if (empty($latest_post_by_user)){
-		echo "\t<! No memcache object found: posts_by_" . $res['userid'] . " !>\n";
-		$latest_post_by_user = array();
+		
+		if (empty($latest_post_by_user)){
+		    echo "\t<! No memcache object found: latest_post_by_" . $res['userid'] . ", fetching from DB instead !>\n";
+		    $latest_post_by_user = array();
+		    $sql = "select postid,text,postdate,image from posts where userid = '" . $res['userid'] . "' order by postdate desc LIMIT 1;";
+		    $latest_post_query = $dbh->query($sql);		  
+		    $latest_post_by_user = $latest_post_query->fetch(PDO::FETCH_ASSOC);
+		    // cache for an hour
+		    if ( isset($memcache) and $memcache ){
+			echo "\t<! Storing into memcache for next time: latest_post_by_" . $res['userid'] . " : " . $latest_post_by_user['text'] . " !>\n";  
+			$memcache->set("latest_post_by_" . $res['userid'], $latest_post_by_user,0,3600);
+		    }
+		}
+	    } else {
 		$sql = "select postid,text,postdate,image from posts where userid = '" . $res['userid'] . "' order by postdate desc LIMIT 1;";
 		$latest_post_query = $dbh->query($sql);		  
 		$latest_post_by_user = $latest_post_query->fetch(PDO::FETCH_ASSOC);
-		// cache for 10 minutes
-		if ( isset($memcache) and $memcache ){
-		    $memcache->set("latest_post_by_" . $res['userid'], $latest_post_by_user,0,600);
-		}	
 	    }
 	    echo "\t<td colspan=3 >\n";
 	    echo "\t<table>\n";

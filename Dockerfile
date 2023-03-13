@@ -15,7 +15,7 @@ RUN mkdir /var/www/html/images
 ADD code/* /var/www/html/
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 ADD init.sh /
-ADD config.php /var/www/html
+ADD config.php.docker /var/www/html/config.php
 
 EXPOSE 80
 EXPOSE 9117

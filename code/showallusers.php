@@ -18,6 +18,25 @@ try {
     
     
 //    $result = mysql_query("select userID,name,status,posts,comments from user");
+
+    // Count the number of users, posts, comments and images
+    $stmt = $dbh->query('select count(userID) from users;');
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $user_count = $row['count'];
+    echo "users: " . $row['count'] . "\n";
+    
+    $stmt = $dbh->query('select count(postID) from posts;');
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    echo "posts: " . $row['count'] . "\n";
+        
+    $stmt = $dbh->query('select count(commentID) from comments;');
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    echo "comments: " . $row['count'] . "\n";
+
+    $stmt = $dbh->query('select count(pictureID) from pictures;');
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    echo "pictures: " . $row['count'] . "\n";
+    
     $sql = "select userid,name,status,posts,comments,picture from users";
     echo "<table>\n";
     foreach ($dbh->query($sql) as $rec){

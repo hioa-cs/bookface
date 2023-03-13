@@ -2,7 +2,7 @@ version: '3.3'
 
 configs:
   bf_config:
-    file: ./config.php
+    file: ./config.php.swarm
 
   haproxy_config:
     file: ./haproxy.cfg
@@ -13,10 +13,8 @@ networks:
 
 services:
   web:
-    image: ghcr.io/kybeg/bf:latest
+    image: 192.168.128.23:5000/bf:v17
     
-    restart: always
-
     configs:
       - source: bf_config
         target: /var/www/html/config.php
