@@ -29,15 +29,15 @@ All the instructions assume you are root on the machines in question.
 You can find the official installation instructions here: 
 https://www.cockroachlabs.com/docs/stable/install-cockroachdb-linux.html
 
-Our instructions are adapted from theirs. At the time of writing, the latest version of the database is 19.2.2.
+Our instructions are adapted from theirs. At the time of writing, the latest version of the database is 23.2.2.
 Be aware that the version number may have changed, in which case the
 URL below needs to be changed as well.
 
 
 ```
-wget https://binaries.cockroachdb.com/cockroach-v22.2.2.linux-amd64.tgz
-tar xzf cockroach-v22.2.2.linux-amd64.tgz
-cp cockroach-v22.2.2.linux-amd64/cockroach /usr/local/bin
+https://binaries.cockroachdb.com/cockroach-v23.1.13.linux-amd64.tgz
+tar xzf cockroach-v23.1.13.linux-amd64.tgz
+cp cockroach-v23.1.13.linux-amd64/cockroach /usr/local/bin
 ```
 The three above commands download the latest release as a compressed
 archive. The tar command will extract the archive and finally we copy
