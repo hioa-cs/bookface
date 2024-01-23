@@ -35,7 +35,7 @@ URL below needs to be changed as well.
 
 
 ```
-https://binaries.cockroachdb.com/cockroach-v23.1.13.linux-amd64.tgz
+wget https://binaries.cockroachdb.com/cockroach-v23.1.13.linux-amd64.tgz
 tar xzf cockroach-v23.1.13.linux-amd64.tgz
 cp cockroach-v23.1.13.linux-amd64/cockroach /usr/local/bin
 ```
