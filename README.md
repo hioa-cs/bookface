@@ -125,11 +125,10 @@ These commands will set up the tables (make sure you remember to
 change the name of bfuser if you did so above):
 ```
 USE bf;
-CREATE table users ( userID INT PRIMARY KEY DEFAULT unique_rowid(),
-name STRING(50), picture STRING(300), bio STRING(5000) , status STRING(10), posts INT, comments INT, lastPostDate TIMESTAMP DEFAULT NOW(), createDate TIMESTAMP DEFAULT NOW());
-CREATE table posts ( postID INT PRIMARY KEY DEFAULT unique_rowid(), userID INT, text STRING(300), name STRING(150), image STRING(32), postDate TIMESTAMP DEFAULT NOW());
-CREATE table comments ( commentID INT PRIMARY KEY DEFAULT unique_rowid(), postID INT, userID INT, text STRING(300),  postDate TIMESTAMP DEFAULT NOW());
-CREATE table pictures ( pictureID STRING(300), picture BYTES );
+CREATE table users ( userID STRING(50) PRIMARY KEY DEFAULT unique_rowid(), name STRING(50), age INT, picture STRING(300), status STRING(10), bio TEXT, posts INT, stats STRING(50), comments INT, lastPostDate TIMESTAMP DEFAULT NOW(), createDate TIMESTAMP DEFAULT NOW());
+CREATE table posts ( postID STRING(50) PRIMARY KEY DEFAULT unique_rowid(), userID STRING(50),text TEXT, stats STRING(200), name STRING(150), image STRING(32), postDate TIMESTAMP DEFAULT NOW());
+CREATE table comments ( commentID STRING(50) PRIMARY KEY DEFAULT unique_rowid(), postID STRING(50), userID STRING(50), stats STRING(200), text TEXT,  postDate TIMESTAMP DEFAULT NOW());
+CREATE table pictures ( pictureID STRING(300), stats STRING(200), picture BLOB );
 GRANT SELECT,UPDATE,INSERT on TABLE bf.* to bfuser;
 ```
 
@@ -156,7 +155,7 @@ On the webserver host, install apache2 and the neccesary dependancies:
 
 ```
 apt-get update
-apt-get install apache2 libapache2-mod-php php-pgsql net-tools
+apt-get install apache2 libapache2-mod-php php-pgsql net-tools php-memcache
 ```
 
 You should be able to see that the apache2 webserver is running using
@@ -190,7 +189,7 @@ git clone https://github.com/hioa-cs/bookface.git
 cd bookface
 ```
 
-Now, remove the default index.html file and move the main PHP files into apache's document root:
+Now, remove the existing index.html file and move the bookface code into apache's document root:
 
 ```
 rm /var/www/html/index.html
@@ -202,29 +201,28 @@ One important part of how bookface works, is it's configuration file. This is wh
 Next, make a copy of the example configuration file. You may want to keep this file sepparate from the git repository, since it can work with several versions of the code.
 
 ```
-cp config.php /var/www/html/config.php
+cp config.json /var/www/html/config.json
 ```
 
-Now, you can edit the config.php file and fill out the variables.
+Now, you can edit the config.json file and fill out the variables.
 
 ```
-nano /var/www/html/config.php
+nano /var/www/html/config.json
 ```
 
-Let's assume that the IP address of the database is 192.168.131.23 and we chose bfuser as a username. 
+The file is empty, which means that bookface will not be able to work very well. Let's assume that the IP address of the database is 192.168.131.23 and we chose bfuser as a username. 
 Let's also assume that the floating/public IP address (assuming you are in a cloud environment) is 10.20.0.43. 
-Let's also assume that the port number of the database is 26257. The config.php file would then look like this: 
+Let's also assume that the port number of the database is 26257. The config.json file would then look like this: 
 ```
-<?php
-$dbhost = "192.168.131.23";
-$dbport = "26257";
-$db = "bf";
-$dbuser = "bfuser";
-$dbpassw = '';
-$webhost = '10.20.0.43';
-$weburl = 'http://' . $webhost ;
-$frontpage_limit = 1000;
-?>
+{
+  "dbhost" : "192.168.131.23",
+  "dbport" : "26257",
+  "db" : "bf",
+  "dbuser" : "bfuser",
+  "dbpassw" : "",
+  "webhost" : "10.20.0.43",
+  "frontpage_limit" : "1000"
+}
 ```
 
 ## Test the setup
@@ -241,14 +239,14 @@ curl http://floating-ip
 
 The information to look for, is this part:
 ```
-<table>
+<table class=info-table >
 <tr><td>Users: </td><td>0</td></tr>
 <tr><td>Posts: </td><td>0</td></tr>
 <tr><td>Comments: </td><td>0</td></tr>
 </table>
 ```
 If you can see the zeroes, it means we have a connection to the
-database and the site is working as intended.
+database and the site is working as intended!
 
 
 Likewise, in a web-browser you should se a relatively bare but
