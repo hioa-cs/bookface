@@ -10,7 +10,7 @@ for the webserver can be repeated on multiple webservers who are
 behind a load-balancer, but we do not cover the steps of setting up
 the load-balancer itself here.
 
-**We assume that Ubuntu 22.04 is used as a base system.**
+**We assume that Ubuntu 22.04 or later is used as a base system.**
 
 # Setting up the database (CockroachDB)
 
@@ -125,7 +125,8 @@ These commands will set up the tables (make sure you remember to
 change the name of bfuser if you did so above):
 ```
 USE bf;
-CREATE table users ( userID INT PRIMARY KEY DEFAULT unique_rowid(), name STRING(50), picture STRING(300), status STRING(10), posts INT, comments INT, lastPostDate TIMESTAMP DEFAULT NOW(), createDate TIMESTAMP DEFAULT NOW());
+CREATE table users ( userID INT PRIMARY KEY DEFAULT unique_rowid(),
+name STRING(50), picture STRING(300), bio STRING(5000) , status STRING(10), posts INT, comments INT, lastPostDate TIMESTAMP DEFAULT NOW(), createDate TIMESTAMP DEFAULT NOW());
 CREATE table posts ( postID INT PRIMARY KEY DEFAULT unique_rowid(), userID INT, text STRING(300), name STRING(150), image STRING(32), postDate TIMESTAMP DEFAULT NOW());
 CREATE table comments ( commentID INT PRIMARY KEY DEFAULT unique_rowid(), postID INT, userID INT, text STRING(300),  postDate TIMESTAMP DEFAULT NOW());
 CREATE table pictures ( pictureID STRING(300), picture BYTES );

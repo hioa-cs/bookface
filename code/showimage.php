@@ -43,23 +43,29 @@ try {
 	if( $use_file_store_for_images ){
 	    $picture_of_user = file_get_contents("images/" . $row["picture"]);
 	} else {
-	    $sql = "select picture from users where userid = $user";
+	    $sql = "select picture from users where userid = '$user'";
 	    $stmt = $dbh->query($sql);
 	    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-	    
-	    $image_query = "select picture from pictures where pictureid = '" . $row["picture"] . "'";
-	    # echo $image_query . "\n";
-	    $stmt = $dbh->query($image_query);
-	    $imagerow = $stmt->fetch(PDO::FETCH_ASSOC);
-#	    print_r($imagerow);
-	    
-	    ob_start();
-	    fpassthru($imagerow["picture"]);
-	   
-	    
-	    $picture_of_user = ob_get_contents();
-	    ob_end_clean();
-	    #echo $picture_of_user;
+		
+		$image_query = "SELECT picture FROM pictures WHERE pictureID = :pictureID";
+		$stmt = $dbh->prepare($image_query);
+		$stmt->execute([':pictureID' => $row["picture"]]);
+		$imagerow = $stmt->fetch(PDO::FETCH_ASSOC);
+		
+		if ($imagerow && isset($imagerow["picture"])) {
+			$picture_hex = $imagerow["picture"]; // Hexadecimal string
+		
+			// Convert hex string back to binary
+			$picture_binary = hex2bin(stream_get_contents($picture_hex));
+		
+			// Output the binary image data
+			header("Content-type: image/jpeg"); // Adjust MIME type if needed
+			echo $picture_binary;
+			exit;
+		} else {
+			http_response_code(404);
+			echo "Image not found.";
+		}  
 	}
     }
         // cache for 10 minutes
@@ -72,6 +78,4 @@ try {
 }  catch (Exception $e) {
     echo $e->getMessage() . "\r\n";
 }
-
 ?>
-

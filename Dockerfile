@@ -9,13 +9,14 @@ RUN apt-get update &&  apt-get install -y apache2 libapache2-mod-php php-mysql g
 
 # RUN echo "error_log = /dev/stderr" >> /etc/php/7.4/apache2/php.ini
 
-
 RUN rm /var/www/html/index.html
 RUN mkdir /var/www/html/images
+RUN rm /etc/localtime
+RUN ln -s /usr/share/zoneinfo/Europe/Oslo /etc/localtime
 ADD code/* /var/www/html/
+COPY config.json /var/www/html/config.json
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 ADD init.sh /
-ADD config.php.docker /var/www/html/config.php
 
 EXPOSE 80
 EXPOSE 9117

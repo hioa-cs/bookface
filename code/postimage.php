@@ -57,7 +57,7 @@ try {
         $memcache->set($key, $picture,0,$memcache_picture_duration);
     }
     header("Content-type: image/jpg");
-    echo $picture;				
+    echo hex2bin($picture);				
 				
 }  catch (Exception $e) {
     echo $e->getMessage() . "\r\n";
