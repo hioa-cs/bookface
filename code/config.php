@@ -39,6 +39,7 @@ $dbpassw = getEnvOrConfig('BF_DB_PASS', $config['dbpassw'] ?? '');
 $webhost = getEnvOrConfig('BF_WEBHOST', $config['webhost'] ?? 'localhost');
 $imagepath = getEnvOrConfig('BF_IMAGE_PATH', $config['imagepath'] ?? '/var/www/images');
 $frontpage_limit = getEnvOrConfig('BF_FRONTPAGE_LIMIT', $config['frontpage_limit'] ?? '1000');
+$use_activity_cutoff_days = getEnvOrConfig('BF_ACTIVITY_CUTOFF_DAYS', $config['use_activity_cutoff_days'] ?? '');
 $weburl = 'http://' . $webhost;
 
 // Memcache configuration
