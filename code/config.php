@@ -13,6 +13,7 @@ if (!file_exists($configPath)) {
 $configContents = file_get_contents($configPath);
 $config = json_decode($configContents, true);
 
+
 if (json_last_error() !== JSON_ERROR_NONE) {
     http_response_code(500);
     echo "<h2>Error: Invalid Configuration Format</h2>";
@@ -25,7 +26,7 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 
 // Function to get environment variable or fallback to JSON config value
 function getEnvOrConfig($envKey, $configKey, $default = null) {
-    $envValue = getenv($envKey); 
+    $envValue = getenv($envKey);
     return $envValue !== false ? $envValue : ($default ?? ($configKey ?? null));
 }
 
@@ -43,9 +44,9 @@ $use_activity_cutoff_days = getEnvOrConfig('BF_ACTIVITY_CUTOFF_DAYS', $config['u
 $weburl = 'http://' . $webhost;
 
 // Memcache configuration
-$memcache_enabled_pictures = 0;
-$memcache_enabled = 0;
-$memcache_server = null;
+$memcache_enabled_pictures = getEnvOrConfig('BF_MEMCACHE_ENABLED_PICTURES', $config['memcache_enabled_pictures'] ?? '');
+$memcache_enabled = getEnvOrConfig('BF_MEMCACHE_ENABLED', $config['memcache_enabled'] ?? '');;
+$memcache_server = getEnvOrConfig('BF_MEMCACHE_SERVER', $config['memcache_server'] ?? '');;
 
 if (getenv('BF_MEMCACHE_SERVER')) {
     $memcache_enabled_pictures = 1;

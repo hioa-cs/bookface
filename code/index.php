@@ -14,6 +14,7 @@ $fast_cutoff_search = 0;
 $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 include_once "config.php";
+
 echo "<div class=\"container\" >\n";
 
 echo "<header>\n";
