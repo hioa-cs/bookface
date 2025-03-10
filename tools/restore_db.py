@@ -3,6 +3,7 @@ import psycopg2
 import json
 import binascii
 import argparse
+import shutil
 from datetime import datetime
 
 # Database configuration
@@ -20,7 +21,15 @@ def log(message, verbose):
     if verbose:
         print(message)
 
-
+        
+def copy_images(backup_location,target_location):
+    """Restore images, but to a local folder. """
+    for filename in os.listdir(backup_location):
+        source_file = os.path.join(backup_location, filename)
+        destination_file = os.path.join(target_location, filename)
+        shutil.copy2(source_file, destination_file)
+        print(f"Copied: {source_file} -> {destination_file}")
+        
 def restore_meta(root_cursor, meta_file, db_user, verbose):
     """Restore metadata: create database, assign privileges, and dynamically recreate tables."""
     log("Restoring metadata from meta.json...", verbose)
@@ -31,7 +40,8 @@ def restore_meta(root_cursor, meta_file, db_user, verbose):
 
     # Extract database name
     db_name = meta_data["database"]
-
+    db_user = meta_data["user"]
+    
     # Step 1: Create the database as root
     try:
         log(f"Ensuring database {db_name} exists...", verbose)
@@ -154,6 +164,12 @@ def main():
         help="Path to the backup directory.",
     )
     parser.add_argument(
+        "--local-images",
+        type=str,
+        required=True,
+        help="Store images in this location instead of the database.",
+    )
+    parser.add_argument(
         "--restore-meta",
         action="store_true",
         help="Recreate database, tables, and grant permissions based on metadata.",
@@ -204,7 +220,11 @@ def main():
 
         images_dir = os.path.join(backup_dir, "images")
         if os.path.exists(images_dir):
-            restore_images(user_cursor, images_dir, verbose)
+            if args.local_images :
+                print("Using local storage for images, copying images to " + args.local_images)
+                copy_images(images_dir,args.local_images)
+            else:
+                restore_images(user_cursor, images_dir, verbose)
 
         conn_user.commit()
         print("Database restoration completed successfully.")

@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 import binascii
 import argparse
+import shutil
 
 # Database configuration
 DB_CONFIG = {
@@ -13,6 +14,15 @@ DB_CONFIG = {
     "host": "localhost",
     "port": "26257",
 }
+
+
+def copy_images(backup_location,target_location):
+    """Restore images, but to a local folder. """
+    for filename in os.listdir(backup_location):
+        source_file = os.path.join(backup_location, filename)
+        destination_file = os.path.join(target_location, filename)
+        shutil.copy2(source_file, destination_file)
+        print(f"Copied: {source_file} -> {destination_file}")
 
 
 def create_backup_folder(output_dir=None):
@@ -121,14 +131,29 @@ def fetch_and_save_images(cursor, backup_folder):
 def main():
     parser = argparse.ArgumentParser(description="Backup CockroachDB database to files.")
     parser.add_argument(
+        "--local-images",
+        type=str,
+        required=True,
+        help="Store images in this location instead of the database.",
+    )
+    parser.add_argument(
         "--output-dir",
         type=str,
         help="Specify a directory to store the backup. If not provided, a timestamped folder will be created.",
+    )
+    parser.add_argument(
+        "--db-user",
+        type=str,
+        help="Specify a different user name than bfuser",
     )
     args = parser.parse_args()
 
     # Create the backup folder
     backup_folder = create_backup_folder(args.output_dir)
+    
+    if args.db-user:
+        DB_CONFIG["user"] = args.db-user
+        
 
     try:
         # Connect to the database
@@ -144,7 +169,10 @@ def main():
         fetch_data_and_save(cursor, "comments", os.path.join(backup_folder, "comments.json"))
 
         # Fetch and save images
-        fetch_and_save_images(cursor, backup_folder)
+        if args.local_images:
+            copy_images(args.local_images,backup_folder)
+        else:
+            fetch_and_save_images(cursor, backup_folder)
 
         print("Backup completed successfully.")
 

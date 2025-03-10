@@ -39,6 +39,7 @@ python3 backup_db.py [--output-dir <path_to_directory>]
 
 ### Arguments
 - **`--output-dir` (optional):** Specify the directory where the backup should be saved. If not provided, the script will create a timestamped directory in the current working directory.
+- **`--local-iamges` (optional):** The images are not located in the database, but are placed in a folder.
 
 ### Example Usage
 
@@ -53,6 +54,13 @@ python3 backup_db.py [--output-dir <path_to_directory>]
    ```bash
    python3 backup_db.py --output-dir /path/to/backup
    ```
+
+3. Run the script, but the images are stored in a folder called /bf_images:
+
+   ```bash
+   python3 backup_db.py --local-images=/bf_images
+   ```
+
 
 The script will:
 - Create a folder (if not specified, a timestamped folder will be created).
@@ -74,6 +82,7 @@ python3 restore_db.py --from-source <path_to_backup> [--restore-meta] [-v]
 
 ### Arguments
 - **`--from-source` (required):** Specify the path to the backup directory.
+- **`--local-images` (required):** Place the images in a specific folder instead of the database..
 - **`--restore-meta` (optional):** Recreate the database, users, and tables based on the metadata in the `meta.json` file.
 - **`-v` or `--verbose` (optional):** Enable verbose logging for debugging.
 
@@ -90,8 +99,13 @@ python3 restore_db.py --from-source <path_to_backup> [--restore-meta] [-v]
    ```bash
    python3 restore_db.py --from-source /path/to/backup --restore-meta
    ```
+3. Restore database, users, tables, and all data, but place the images in the folder /bf_images and not in the database:
 
-3. Restore with verbose logging enabled:
+   ```bash
+   python3 restore_db.py --from-source /path/to/backup --restore-meta --local-images=/bf_images
+   ```
+
+4. Restore with verbose logging enabled:
 
    ```bash
    python3 restore_db.py --from-source /path/to/backup --restore-meta -v

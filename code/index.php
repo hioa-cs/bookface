@@ -2,7 +2,7 @@
 <HEAD>
     <LINK href="stylesheet.css" rel="stylesheet" type="text/css">
   </HEAD>
-     <!-- bookface version 22 -->
+     <!-- bookface version 23 -->
   <body>
 <?php
 $starttime = time();
