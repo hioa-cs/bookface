@@ -133,7 +133,6 @@ def main():
     parser.add_argument(
         "--local-images",
         type=str,
-        required=True,
         help="Store images in this location instead of the database.",
     )
     parser.add_argument(
@@ -152,7 +151,7 @@ def main():
     backup_folder = create_backup_folder(args.output_dir)
     
     if args.db-user:
-        DB_CONFIG["user"] = args.db-user
+        DB_CONFIG["user"] = args.db_user
         
 
     try:
