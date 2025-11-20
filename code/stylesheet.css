@@ -114,3 +114,11 @@ header h1 {
     border-radius: 8px;
     margin-top: 10px;
 }
+
+.load-time {
+    max-width: 900px;
+    margin: 10px auto 20px;
+    text-align: center;
+    color: #666;
+    font-size: 12px;
+}

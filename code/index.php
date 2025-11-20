@@ -2,10 +2,10 @@
 <HEAD>
     <LINK href="stylesheet.css" rel="stylesheet" type="text/css">
   </HEAD>
-     <!-- bookface version 23 -->
+     <!-- bookface version 23.1 -->
   <body>
 <?php
-$starttime = time();
+$starttime = microtime(true);
 $use_file_store_for_images = 0;
 $frontpage_cutoff_days = "";
 $fast_random_search = 0;
@@ -350,8 +350,8 @@ try {
     echo "</div>\n";
     echo "</div>\n";
     
-    $totaltime = time() - $starttime;
-    echo "load time: " . $totaltime . "s\n";
+	    $totaltime = microtime(true) - $starttime;
+	    echo "<div class=\"load-time\">load time: " . number_format($totaltime, 2) . "s</div>\n";
    
 } catch (Exception $e) {
     echo $e->getMessage() . "\r\n";
