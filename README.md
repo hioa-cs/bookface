@@ -107,7 +107,7 @@ git clone https://github.com/hioa-cs/bookface.git
 cd bookface
 ```
 
-Open the file bootstrap_bf.sql with an editor, such as nano:
+Open the file bootstrap_db.sql with an editor, such as nano:
 
 ```
 nano bootstrap_db.sql
@@ -120,7 +120,7 @@ if you chose to change the username, then the bootstrap file has to be updated f
 You are now ready to feed the sql code to the database, which will create the bf database with all its tables:
 
 ```
-ysqlsh -h SERVER-IP -f bootstrap_bf.sql
+ysqlsh -h SERVER-IP -f bootstrap_db.sql
 ```
 
 
@@ -191,7 +191,7 @@ nano /var/www/html/config.json
 
 The file is empty, which means that bookface will not be able to work very well. Let's assume that the IP address of the database is 192.168.131.23 and we chose bfuser as a username. 
 Let's also assume that the floating/public IP address (assuming you are in a cloud environment) is 10.20.0.43. 
-Let's also assume that the port number of the database is the default 5432. The config.json file would then look like this: 
+Let's also assume that the port number of the database is the default 5433. The config.json file would then look like this: 
 ```
 {
   "dbhost" : "192.168.131.23",
