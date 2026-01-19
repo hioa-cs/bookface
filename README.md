@@ -110,7 +110,7 @@ cd bookface
 Open the file bootstrap_bf.sql with an editor, such as nano:
 
 ```
-nano bootstrap_bf.sql
+nano bootstrap_db.sql
 ```
 
 For a bit of extra security, it is advisable to use a different username than bfuser, but be aware that you have to remember to use your chosen alternative username several places during this setup. regardless of the extra hassle, it is the better choice. 
