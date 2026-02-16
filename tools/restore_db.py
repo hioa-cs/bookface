@@ -1,241 +1,388 @@
+#!/usr/bin/env python3
+
+# VERSION 0.4
+
 import os
-import psycopg2
 import json
-import binascii
 import argparse
 import shutil
-from datetime import datetime
+import re
+from pathlib import Path
+from typing import Any, Dict, Optional, List, Tuple
 
-# Database configuration
-DB_CONFIG = {
-    "dbname": "bf",
-    "user": "bfuser",
-    "password": "",  # Add your password if required
-    "host": "localhost",
-    "port": "26257",
-}
+import psycopg2
 
 
-def log(message, verbose):
-    """Log a message if verbose mode is enabled."""
+_HEX_RE = re.compile(r"^[0-9a-fA-F]+$")
+
+
+def log(msg: str, verbose: bool) -> None:
     if verbose:
-        print(message)
+        print(msg)
 
-        
-def copy_images(backup_location,target_location):
-    """Restore images, but to a local folder. """
-    for filename in os.listdir(backup_location):
-        source_file = os.path.join(backup_location, filename)
-        destination_file = os.path.join(target_location, filename)
-        shutil.copy2(source_file, destination_file)
-        print(f"Copied: {source_file} -> {destination_file}")
-        
-def restore_meta(root_cursor, meta_file, db_user, verbose):
-    """Restore metadata: create database, assign privileges, and dynamically recreate tables."""
-    log("Restoring metadata from meta.json...", verbose)
 
-    # Load metadata
-    with open(meta_file, "r") as f:
-        meta_data = json.load(f)
+def admin_connect(host: str, port: str, admin_user: str, admin_db: str, admin_password: str = ""):
+    return psycopg2.connect(dbname=admin_db, user=admin_user, password=admin_password, host=host, port=port)
 
-    # Extract database name
-    db_name = meta_data["database"]
-    db_user = meta_data["user"]
-    
-    # Step 1: Create the database as root
+
+def user_connect(host: str, port: str, dbname: str, user: str, password: str = ""):
+    return psycopg2.connect(dbname=dbname, user=user, password=password, host=host, port=port)
+
+
+def copy_images(backup_images_dir: str, target_location: str) -> None:
+    os.makedirs(target_location, exist_ok=True)
+    for filename in os.listdir(backup_images_dir):
+        src = os.path.join(backup_images_dir, filename)
+        dst = os.path.join(target_location, filename)
+        shutil.copy2(src, dst)
+        print(f"Copied: {src} -> {dst}")
+
+
+def looks_like_jpeg(b: bytes) -> bool:
+    return len(b) >= 2 and b[0] == 0xFF and b[1] == 0xD8
+
+
+def normalize_hex_text(s: str) -> Optional[str]:
+    s = s.strip()
+    if s.startswith("\\\\x"):
+        s = s[1:]
+    if s.startswith("\\x") or s.startswith("0x"):
+        s = s[2:]
+    s = "".join(s.split())
+    if len(s) == 0 or (len(s) % 2) != 0:
+        return None
+    if not _HEX_RE.match(s):
+        return None
+    return s.lower()
+
+
+def image_file_to_app_expected_payload(path: Path) -> bytes:
+    """
+    Store exactly what the PHP expects:
+      pictures.picture (bytea) contains ASCII hex of the JPEG bytes.
+    """
+    raw = path.read_bytes()
+
+    # If it's a real JPEG, convert to hex text.
+    if looks_like_jpeg(raw):
+        return raw.hex().encode("ascii")
+
+    # If it's already hex text, normalize it and store as ASCII.
     try:
-        log(f"Ensuring database {db_name} exists...", verbose)
-        root_cursor.execute(f"CREATE DATABASE IF NOT EXISTS {db_name};")
-        log(f"Database {db_name} created or already exists.", verbose)
-    except Exception as e:
-        log(f"Error creating database {db_name}: {e}", verbose)
-        raise
+        s = raw.decode("ascii")
+    except UnicodeDecodeError:
+        raise ValueError(f"{path.name}: not JPEG bytes and not ASCII hex text")
 
-    # Step 2: Create the user if it doesn't exist
-    try:
-        log(f"Checking if user {db_user} exists...", verbose)
-        root_cursor.execute(f"SELECT 1 FROM pg_roles WHERE rolname = '{db_user}';")
-        if not root_cursor.fetchone():
-            log(f"User {db_user} does not exist. Creating user...", verbose)
-            root_cursor.execute(f"CREATE USER {db_user};")
-            log(f"User {db_user} created successfully.", verbose)
-        else:
-            log(f"User {db_user} already exists.", verbose)
-    except Exception as e:
-        log(f"Error checking/creating user {db_user}: {e}", verbose)
-        raise
-
-    # Step 3: Grant privileges to the target user
-    try:
-        log(f"Granting privileges on {db_name} to user {db_user}...", verbose)
-        root_cursor.execute(f"GRANT ALL ON DATABASE {db_name} TO {db_user};")
-        log(f"Privileges granted to {db_user} on {db_name}.", verbose)
-    except Exception as e:
-        log(f"Error granting privileges: {e}", verbose)
-        raise
-
-    # Step 4: Reconnect as the target user for further operations
-    log(f"Switching to database {db_name} as user {db_user}...", verbose)
-    conn_user = psycopg2.connect(
-        dbname=db_name,
-        user=db_user,
-        password=DB_CONFIG["password"],
-        host=DB_CONFIG["host"],
-        port=DB_CONFIG["port"],
-    )
-    conn_user.autocommit = True
-    user_cursor = conn_user.cursor()
-
-    try:
-        # Step 5: Create tables dynamically
-        for table, details in meta_data["tables"].items():
-            column_definitions = []
-            for column in details["columns"]:
-                col_def = f"{column['name']} {column['type']}"
-                if column["nullable"] == "NO":
-                    col_def += " NOT NULL"
-                if column["default"]:
-                    col_def += f" DEFAULT {column['default']}"
-                column_definitions.append(col_def)
-
-            create_table_query = f"CREATE TABLE IF NOT EXISTS {table} ({', '.join(column_definitions)});"
-            log(f"Executing: {create_table_query}", verbose)
-            user_cursor.execute(create_table_query)
-            log(f"Table {table} created successfully.", verbose)
-
-        log("All tables created successfully.", verbose)
-
-    finally:
-        # Close the user connection
-        user_cursor.close()
-        conn_user.close()
-
-    log("Metadata restoration complete.", verbose)
+    norm = normalize_hex_text(s)
+    if not norm:
+        raise ValueError(f"{path.name}: ASCII data is not valid hex text")
+    return norm.encode("ascii")
 
 
-def restore_table(cursor, table_name, file_path, verbose):
-    """Restore data from a JSON file into a table."""
-    log(f"Restoring table: {table_name} from {file_path}...", verbose)
+def ensure_role_and_db(admin_cur, dbname: str, app_user: str, verbose: bool) -> None:
+    """
+    Create role/user and database if missing (Postgres/YSQL).
+    """
+    log(f"Ensuring role {app_user} exists...", verbose)
+    admin_cur.execute("SELECT 1 FROM pg_roles WHERE rolname = %s;", (app_user,))
+    if not admin_cur.fetchone():
+        admin_cur.execute(f'CREATE ROLE "{app_user}" LOGIN;')
+        log(f"Created role {app_user}", verbose)
 
-    # Load the JSON file
-    with open(file_path, "r") as f:
+    log(f"Ensuring database {dbname} exists...", verbose)
+    admin_cur.execute("SELECT 1 FROM pg_database WHERE datname = %s;", (dbname,))
+    if not admin_cur.fetchone():
+        admin_cur.execute(f'CREATE DATABASE "{dbname}" OWNER "{app_user}";')
+        log(f"Created database {dbname}", verbose)
+
+    admin_cur.execute(f'GRANT ALL PRIVILEGES ON DATABASE "{dbname}" TO "{app_user}";')
+    log(f"Granted DB privileges on {dbname} to {app_user}", verbose)
+
+
+def apply_extensions(conn, extensions: List[dict], verbose: bool) -> None:
+    if not extensions:
+        return
+    cur = conn.cursor()
+    for ext in extensions:
+        name = ext["name"]
+        # version pinning is optional; CREATE EXTENSION ... VERSION may not be supported/needed
+        sql = f'CREATE EXTENSION IF NOT EXISTS "{name}";'
+        log(sql, verbose)
+        cur.execute(sql)
+    cur.close()
+    conn.commit()
+
+
+def apply_tables(conn, tables_meta: Dict[str, Any], verbose: bool) -> None:
+    cur = conn.cursor()
+    for table, details in tables_meta.items():
+        sql = details.get("create_table_sql")
+        if not sql:
+            raise RuntimeError(f"meta.json missing create_table_sql for table {table}")
+        log(sql, verbose)
+        cur.execute(sql)
+    cur.close()
+    conn.commit()
+
+
+def apply_constraints(conn, tables_meta: Dict[str, Any], verbose: bool) -> None:
+    """
+    Apply constraints after tables exist.
+    We use the saved pg_get_constraintdef output.
+    """
+    cur = conn.cursor()
+
+    # Apply PK/UNIQUE/CHECK/FK — order usually doesn’t matter, but FK needs referenced tables (which exist now)
+    for table, details in tables_meta.items():
+        for c in details.get("constraints", []):
+            cname = c["name"]
+            cdef = c["definition"]
+            # Add constraint if not exists: Postgres doesn't support IF NOT EXISTS for ADD CONSTRAINT.
+            # So we check pg_constraint first.
+            cur.execute(
+                """
+                SELECT 1
+                FROM pg_constraint pc
+                JOIN pg_class t ON t.oid = pc.conrelid
+                JOIN pg_namespace n ON n.oid = t.relnamespace
+                WHERE n.nspname = 'public'
+                  AND t.relname = %s
+                  AND pc.conname = %s
+                """,
+                (table, cname),
+            )
+            if cur.fetchone():
+                continue
+
+            sql = f'ALTER TABLE public."{table}" ADD CONSTRAINT "{cname}" {cdef};'
+            log(sql, verbose)
+            cur.execute(sql)
+
+    cur.close()
+    conn.commit()
+
+
+def apply_indexes(conn, tables_meta: Dict[str, Any], verbose: bool) -> None:
+    """
+    Apply indexes after constraints.
+    We use pg_get_indexdef output; add IF NOT EXISTS when possible.
+    """
+    cur = conn.cursor()
+
+    for table, details in tables_meta.items():
+        for idx in details.get("indexes", []):
+            name = idx["name"]
+            definition = idx["definition"]
+
+            # Check if index exists
+            cur.execute(
+                """
+                SELECT 1
+                FROM pg_class c
+                JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE n.nspname = 'public'
+                  AND c.relkind = 'i'
+                  AND c.relname = %s
+                """,
+                (name,),
+            )
+            if cur.fetchone():
+                continue
+
+            # pg_get_indexdef returns "CREATE INDEX ..." (or "CREATE UNIQUE INDEX ...")
+            log(definition, verbose)
+            cur.execute(definition)
+
+    cur.close()
+    conn.commit()
+
+
+def apply_grants(conn, grants: List[dict], verbose: bool) -> None:
+    """
+    Reapply table grants (best effort).
+    info_schema.table_privileges lists individual privileges; we replay them.
+    """
+    if not grants:
+        return
+    cur = conn.cursor()
+    for g in grants:
+        table = g["table_name"]
+        priv = g["privilege_type"]
+        grantee = g["grantee"]
+        sql = f'GRANT {priv} ON TABLE public."{table}" TO "{grantee}";'
+        log(sql, verbose)
+        try:
+            cur.execute(sql)
+        except Exception as e:
+            # best effort; grants can fail if grantee doesn't exist or Yugabyte differs
+            log(f"WARNING: grant failed: {sql} ({e})", verbose)
+            conn.rollback()
+            # keep going
+            cur = conn.cursor()
+    cur.close()
+    conn.commit()
+
+
+def restore_table(conn, table_name: str, file_path: str, verbose: bool, batch: int = 500) -> int:
+    with open(file_path, "r", encoding="utf-8") as f:
         data = json.load(f)
+    if not data:
+        return 0
 
-    # Dynamically generate the insert query
-    if data:
-        columns = data[0].keys()
-        placeholders = ", ".join([f"%({col})s" for col in columns])
-        insert_query = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
+    cols = list(data[0].keys())
+    placeholders = ", ".join([f"%({c})s" for c in cols])
+    collist = ", ".join([f'"{c}"' for c in cols])
 
-        # Insert the rows
-        for row in data:
-            log(f"Executing: {insert_query} with {row}", verbose)
-            cursor.execute(insert_query, row)
+    sql = f'INSERT INTO public."{table_name}" ({collist}) VALUES ({placeholders})'
+    cur = conn.cursor()
 
-    log(f"Restored {len(data)} rows into {table_name}.", verbose)
+    inserted = 0
+    chunk: List[dict] = []
+    for row in data:
+        chunk.append(row)
+        if len(chunk) >= batch:
+            cur.executemany(sql, chunk)
+            inserted += len(chunk)
+            chunk.clear()
 
+    if chunk:
+        cur.executemany(sql, chunk)
+        inserted += len(chunk)
 
-def restore_images(cursor, images_dir, verbose):
-    """Restore images from the images directory into the pictures table."""
-    log(f"Restoring images from {images_dir}...", verbose)
-
-    for image_file in os.listdir(images_dir):
-        image_path = os.path.join(images_dir, image_file)
-        with open(image_path, "rb") as f:
-            image_binary = f.read()
-
-        # Convert binary data to hex for storage
-        image_hex = binascii.hexlify(image_binary).decode()
-
-        # Insert into the pictures table
-        insert_query = "INSERT INTO pictures (pictureID, picture) VALUES (%s, %s)"
-        log(f"Executing: {insert_query} with ({image_file}, [binary data])", verbose)
-        cursor.execute(insert_query, (image_file, image_hex))
-
-    log(f"Restored images from {images_dir}.", verbose)
+    cur.close()
+    conn.commit()
+    log(f"Restored {inserted} rows into {table_name}", verbose)
+    return inserted
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Restore CockroachDB database from backup.")
-    parser.add_argument(
-        "--from-source",
-        type=str,
-        required=True,
-        help="Path to the backup directory.",
-    )
-    parser.add_argument(
-        "--local-images",
-        type=str,
-        required=True,
-        help="Store images in this location instead of the database.",
-    )
-    parser.add_argument(
-        "--restore-meta",
-        action="store_true",
-        help="Recreate database, tables, and grant permissions based on metadata.",
-    )
-    parser.add_argument(
-        "-v", "--verbose",
-        action="store_true",
-        help="Enable verbose output for debugging.",
-    )
-    args = parser.parse_args()
+def restore_images_to_db(conn, images_dir: str, verbose: bool, progress_every: int = 50) -> int:
+    """
+    Restore images into pictures with app-expected format (ASCII hex in bytea),
+    and preserve pictureid EXACTLY as filename (no assumptions / no edits).
+    """
+    files = sorted([p for p in Path(images_dir).iterdir() if p.is_file()])
+    if not files:
+        return 0
+
+    cur = conn.cursor()
+
+    # With constraints/indexes restored, ON CONFLICT should be available if pictureid is unique/PK.
+    # But to be safe even if it isn't, we do DELETE+INSERT for idempotence.
+    delete_sql = 'DELETE FROM public."pictures" WHERE "pictureid" = %s'
+    insert_sql = 'INSERT INTO public."pictures" ("pictureid", "picture") VALUES (%s, %s)'
+
+    count = 0
+    for p in files:
+        pictureid = p.name
+        payload = image_file_to_app_expected_payload(p)  # ASCII hex bytes
+
+        cur.execute(delete_sql, (pictureid,))
+        cur.execute(insert_sql, (pictureid, psycopg2.Binary(payload)))
+
+        count += 1
+        if count % progress_every == 0:
+            log(f"  restored {count}/{len(files)} images...", verbose)
+
+    cur.close()
+    conn.commit()
+    log(f"Restored {count} images into pictures.", verbose)
+    return count
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description="Restore Bookface from backup (meta.json-driven, self-sufficient).")
+    ap.add_argument("--from-source", required=True, help="Backup directory (meta.json, *.json, images/).")
+
+    ap.add_argument("--admin-user", required=True, help="Admin user for DB/user creation (e.g. yugabyte).")
+    ap.add_argument("--admin-db", default="yugabyte", help="Admin database to connect to (default: yugabyte).")
+    ap.add_argument("--admin-password", default="", help="Admin password (if needed).")
+
+    ap.add_argument("--host", default=None, help="Override host (default: meta.json host).")
+    ap.add_argument("--port", default=None, help="Override port (default: meta.json port).")
+
+    ap.add_argument("--app-password", default="", help="Password for app user (bfuser) if used.")
+    ap.add_argument("--no-create", action="store_true", help="Skip DB/user/schema creation; just load data.")
+    ap.add_argument("--local-images", help="Copy images here instead of inserting into DB.")
+
+    ap.add_argument("--batch", type=int, default=500, help="Batch size for JSON table inserts.")
+    ap.add_argument("--progress-every", type=int, default=50, help="Progress interval for images.")
+    ap.add_argument("-v", "--verbose", action="store_true")
+    args = ap.parse_args()
 
     backup_dir = args.from_source
+    meta_path = os.path.join(backup_dir, "meta.json")
+    if not os.path.exists(meta_path):
+        raise SystemExit(f"meta.json not found in {backup_dir}")
+
+    meta = json.loads(Path(meta_path).read_text(encoding="utf-8"))
+    host = args.host or meta.get("host") or "localhost"
+    port = str(args.port or meta.get("port") or "5433")
+
+    dbname = meta["database"]
+    app_user = meta["user"]
+    extensions = meta.get("extensions", [])
+    tables_meta = meta.get("tables", {})
+    grants = meta.get("grants", [])
+
     verbose = args.verbose
 
-    if not os.path.exists(backup_dir):
-        print(f"Error: Backup directory {backup_dir} does not exist.")
-        return
+    # 1) Admin phase: create role+db
+    if not args.no_create:
+        log(f"[admin] Connecting {args.admin_user}@{host}:{port}/{args.admin_db}", verbose)
+        admin_conn = admin_connect(host, port, args.admin_user, args.admin_db, args.admin_password)
+        admin_conn.autocommit = True
+        admin_cur = admin_conn.cursor()
+        try:
+            ensure_role_and_db(admin_cur, dbname, app_user, verbose)
+        finally:
+            admin_cur.close()
+            admin_conn.close()
 
+        # 2) Schema phase (as app user)
+        log(f"[schema] Connecting {app_user}@{host}:{port}/{dbname}", verbose)
+        schema_conn = user_connect(host, port, dbname, app_user, args.app_password)
+        try:
+            cur = schema_conn.cursor()
+            cur.execute("SET statement_timeout = 0")
+            cur.execute("SET idle_in_transaction_session_timeout = 0")
+            cur.close()
+            schema_conn.commit()
+
+            apply_extensions(schema_conn, extensions, verbose)
+            apply_tables(schema_conn, tables_meta, verbose)
+            apply_constraints(schema_conn, tables_meta, verbose)
+            apply_indexes(schema_conn, tables_meta, verbose)
+            apply_grants(schema_conn, grants, verbose)
+        finally:
+            schema_conn.close()
+
+    # 3) Data phase
+    log(f"[data] Connecting {app_user}@{host}:{port}/{dbname}", verbose)
+    conn = user_connect(host, port, dbname, app_user, args.app_password)
     try:
-        # Connect as root
-        log("Connecting to database as root...", verbose)
-        root_conn = psycopg2.connect(
-            dbname="defaultdb",
-            user="root",  # Assuming root for initial actions
-            host=DB_CONFIG["host"],
-            port=DB_CONFIG["port"],
-        )
-        root_conn.autocommit = True
-        root_cursor = root_conn.cursor()
+        cur = conn.cursor()
+        cur.execute("SET statement_timeout = 0")
+        cur.execute("SET idle_in_transaction_session_timeout = 0")
+        cur.close()
+        conn.commit()
 
-        # Restore metadata if requested
-        if args.restore_meta:
-            meta_file = os.path.join(backup_dir, "meta.json")
-            if not os.path.exists(meta_file):
-                print(f"Error: Metadata file {meta_file} not found.")
-                return
-            restore_meta(root_cursor, meta_file, DB_CONFIG["user"], verbose)
-
-        # Restore data and images
-        log("Connecting to database as user...", verbose)
-        conn_user = psycopg2.connect(**DB_CONFIG)
-        user_cursor = conn_user.cursor()
-
-        for table_name in ["users", "posts", "comments"]:
-            file_path = os.path.join(backup_dir, f"{table_name}.json")
-            if os.path.exists(file_path):
-                restore_table(user_cursor, table_name, file_path, verbose)
+        for t in ["users", "posts", "comments"]:
+            fp = os.path.join(backup_dir, f"{t}.json")
+            if os.path.exists(fp):
+                restore_table(conn, t, fp, verbose, batch=args.batch)
 
         images_dir = os.path.join(backup_dir, "images")
         if os.path.exists(images_dir):
-            if args.local_images :
-                print("Using local storage for images, copying images to " + args.local_images)
-                copy_images(images_dir,args.local_images)
+            if args.local_images:
+                print("Using local storage for images, copying to " + args.local_images)
+                copy_images(images_dir, args.local_images)
             else:
-                restore_images(user_cursor, images_dir, verbose)
+                restore_images_to_db(conn, images_dir, verbose, progress_every=args.progress_every)
 
-        conn_user.commit()
-        print("Database restoration completed successfully.")
+        print("Restore completed successfully.")
 
-    except Exception as e:
-        print(f"Error during restoration: {e}")
     finally:
-        if root_cursor:
-            root_cursor.close()
-        if root_conn:
-            root_conn.close()
+        conn.close()
 
 
 if __name__ == "__main__":

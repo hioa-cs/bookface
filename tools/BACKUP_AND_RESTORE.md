@@ -1,117 +1,147 @@
-# BACKUP AND RESTORE INSTRUCTIONS
+# Backup and Restore Instructions
 
-This document explains how to use the `backup_db.py` and `restore_db.py` scripts for taking a backup of a CockroachDB database and restoring it later. Follow these steps carefully to ensure smooth operations.
+This document describes the current usage of:
 
----
+- `tools/backup_db.py`
+- `tools/restore_db.py`
+
+These scripts are designed for a Postgres-compatible database (including Yugabyte YSQL).
 
 ## Prerequisites
 
-Before using the backup or restore scripts, ensure that the following requirements are met:
+- Python 3
+- `psycopg2` installed
 
-### Install Required Python Packages and Binaries
-Install the required Python packages using pip:
+Example:
 
 ```bash
 pip3 install psycopg2
-apt-get install -y postgresql-client-common postgresql-client
 ```
 
-### Set Up CockroachDB
-Ensure CockroachDB is installed and running. If you’re using insecure mode, make sure the cluster is configured accordingly.
+You also need network access to the target database host/port.
 
-To check if CockroachDB is running, use:
+## Backup
+
+`backup_db.py` creates a backup directory containing:
+
+- `meta.json` (DB metadata, schema details, constraints, indexes, grants)
+- `users.json`
+- `posts.json`
+- `comments.json`
+- `images/` (copied from local folder or exported from `pictures` table)
+
+### Syntax
 
 ```bash
-cockroach sql --insecure
+python3 tools/backup_db.py [options]
 ```
 
----
+### Options
 
-## Using the Backup Script
+- `--local-images <path>`: Copy images from a local folder instead of exporting image blobs from DB.
+- `--output-dir <path>`: Output backup directory. If omitted, a timestamped directory is created.
+- `--db-user <user>`: Override DB user (default is `bfuser`).
+- `--db-host <host>`: Override DB host (default is `localhost`).
+- `--db-port <port>`: Override DB port (default is `5433`).
+- `--db-password <password>`: Override DB password (default is empty).
+- `--batch-size <n>`: Batch size for table JSON export (default: `1000`).
+- `--pictures-id-batch <n>`: Batch size when collecting `pictureid` values (default: `5000`).
+- `--pictures-blob-batch <n>`: Number of images fetched per blob query (default: `1`).
+- `--pictures-progress-every <n>`: Progress interval for image export (default: `25`).
 
-The `backup_db.py` script allows you to take a backup of your CockroachDB database, including tables and images.
+### Examples
 
-### Command Syntax
+Recommended way to back up a single DB running on IP X.X.X.X:
 
 ```bash
-python3 backup_db.py [--output-dir <path_to_directory>]
+python3 backup_tool.py --db-host X.X.X.X --pictures-blob-batch 1 --output-dir /path/to/backup
 ```
 
-### Arguments
-- **`--output-dir` (optional):** Specify the directory where the backup should be saved. If not provided, the script will create a timestamped directory in the current working directory.
-- **`--local-iamges` (optional):** The images are not located in the database, but are placed in a folder.
 
-### Example Usage
-
-1. Run the script without specifying a directory (creates a timestamped backup):
-
-   ```bash
-   python3 backup_db.py
-   ```
-
-2. Run the script and specify a backup directory:
-
-   ```bash
-   python3 backup_db.py --output-dir /path/to/backup
-   ```
-
-3. Run the script, but the images are stored in a folder called /bf_images:
-
-   ```bash
-   python3 backup_db.py --local-images=/bf_images
-   ```
-
-
-The script will:
-- Create a folder (if not specified, a timestamped folder will be created).
-- Export table data as JSON files.
-- Save images to a dedicated `images/` folder inside the backup directory.
-- Generate a `meta.json` file containing the schema and metadata of the database.
-
----
-
-## Using the Restore Script
-
-The `restore_db.py` script allows you to restore a database from a backup created by `backup_db.py`.
-
-### Command Syntax
+Create a timestamped backup:
 
 ```bash
-python3 restore_db.py --from-source <path_to_backup> [--restore-meta] [-v]
+python3 tools/backup_db.py
 ```
 
-### Arguments
-- **`--from-source` (required):** Specify the path to the backup directory.
-- **`--local-images` (required):** Place the images in a specific folder instead of the database..
-- **`--restore-meta` (optional):** Recreate the database, users, and tables based on the metadata in the `meta.json` file.
-- **`-v` or `--verbose` (optional):** Enable verbose logging for debugging.
+Write backup to a specific folder:
 
-### Example Usage
+```bash
+python3 tools/backup_db.py --output-dir /path/to/backup
+```
 
-1. Restore only table data and images (without recreating database and tables):
+Use local images instead of DB images:
 
-   ```bash
-   python3 restore_db.py --from-source /path/to/backup
-   ```
+```bash
+python3 tools/backup_db.py --local-images /bf_images
+```
 
-2. Restore database, users, tables, and all data:
+## Restore
 
-   ```bash
-   python3 restore_db.py --from-source /path/to/backup --restore-meta
-   ```
-3. Restore database, users, tables, and all data, but place the images in the folder /bf_images and not in the database:
+`restore_db.py` restores from a backup folder created by `backup_db.py`.
 
-   ```bash
-   python3 restore_db.py --from-source /path/to/backup --restore-meta --local-images=/bf_images
-   ```
+By default, restore does:
 
-4. Restore with verbose logging enabled:
+1. Admin phase: create app role/database if missing.
+2. Schema phase: apply extensions, tables, constraints, indexes, grants from `meta.json`.
+3. Data phase: restore JSON table data and images.
 
-   ```bash
-   python3 restore_db.py --from-source /path/to/backup --restore-meta -v
-   ```
+### Syntax
 
-### Important Notes
-- **Ensure the Backup Directory Exists:** The path specified in `--from-source` must be valid and contain the files generated by `backup_db.py`.
-- **User Creation:** The `restore_meta` step automatically creates the user (if missing) and assigns privileges.
+```bash
+python3 tools/restore_db.py --from-source <backup_dir> --admin-user <admin_user> [options]
+```
 
+### Required options
+
+- `--from-source <path>`: Backup directory containing `meta.json`.
+- `--admin-user <user>`: Admin user used for role/database creation (for example `yugabyte`).
+
+### Optional options
+
+- `--admin-db <db>`: Admin DB name (default: `yugabyte`).
+- `--admin-password <password>`: Admin password (default empty).
+- `--host <host>`: Override DB host (otherwise uses `meta.json` value, then `localhost` fallback).
+- `--port <port>`: Override DB port (otherwise uses `meta.json` value, then `5433` fallback).
+- `--app-password <password>`: Password for app user from `meta.json` (commonly `bfuser`).
+- `--no-create`: Skip admin/schema creation and only load data.
+- `--local-images <path>`: Copy backup images to local folder instead of inserting into DB `pictures`.
+- `--batch <n>`: Batch size for table inserts (default: `500`).
+- `--progress-every <n>`: Progress interval for image restore (default: `50`).
+- `-v`, `--verbose`: Verbose output.
+
+### Examples
+
+Full restore (create role/db/schema + load data):
+
+```bash
+python3 tools/restore_db.py \
+  --from-source /path/to/backup \
+  --admin-user yugabyte
+```
+
+Restore data only into existing schema:
+
+```bash
+python3 tools/restore_db.py \
+  --from-source /path/to/backup \
+  --admin-user yugabyte \
+  --no-create
+```
+
+Restore and copy images to filesystem instead of DB:
+
+```bash
+python3 tools/restore_db.py \
+  --from-source /path/to/backup \
+  --admin-user yugabyte \
+  --local-images /bf_images
+```
+
+## Notes
+
+- The restore script expects `meta.json` in the backup directory.
+- Table restore currently targets: `users`, `posts`, `comments`.
+- If `images/` exists in backup:
+  - with `--local-images`, files are copied to that directory.
+  - without `--local-images`, images are inserted into `public.pictures`.
