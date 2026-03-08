@@ -2,7 +2,7 @@
 <HEAD>
     <LINK href="stylesheet.css" rel="stylesheet" type="text/css">
   </HEAD>
-     <!-- bookface version 23.1 -->
+     <!-- bookface version 24 -->
   <body>
 <?php
 $starttime = microtime(true);
