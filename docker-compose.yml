@@ -11,7 +11,7 @@ networks:
 
 services:
   web:
-    image: 192.168.128.23:5000/bf:v23
+    image: 192.168.128.23:5000/bf:v24
     networks:
         - bf
     volumes:
