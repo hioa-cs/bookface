@@ -12,9 +12,6 @@ networks:
 services:
   web:
     image: 192.168.128.23:5000/bf:v23
-    
-    ports:
-      - "80:80"
     networks:
         - bf
     volumes:
@@ -25,24 +22,23 @@ services:
     environment:
       BF_MEMCACHE_SERVER: memcache
       BF_DB_HOST: db_balance
-      BF_DB_PORT: 26257
+      BF_DB_PORT: 5433
       BF_DB_USER: bfuser
       BF_DB_NAME: bf
       BF_FRONTPAGE_LIMIT: 500
       BF_USE_LOCAL_IMAGES: 1
-      
+
     deploy:
       replicas: 3
 
   memcache:
     image: memcached
-    
     networks:
       - bf
 
   db_balance:
     image: haproxy
-    
+
     configs:
       - source: haproxy_config
         target: /usr/local/etc/haproxy/haproxy.cfg
@@ -52,3 +48,7 @@ services:
 
     ports:
       - "1936:1936"
+      - "80:80"
+
+    deploy:
+      replicas: 3
